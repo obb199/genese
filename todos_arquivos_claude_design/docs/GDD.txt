@@ -1,0 +1,614 @@
+GÊNESE
+(título de trabalho)
+Documento de Game Design
+Simulação evolutiva de civilização emergente · 2D estilizado
+Versão 0.1 — Documento conceitual e de visão
+Foco: design, mundo, sistemas e direção visual
+(arquitetura técnica em documento separado)
+Índice
+1. Visão geral
+1.1. Pitch de uma frase
+Você é uma presença invisível sobre um mundo nascente: não comanda, apenas influencia — e observa uma civilização inteira se erguer, divergir, prosperar ou ruir por caminhos que você nunca conseguirá prever completamente.
+1.2. O que é o jogo
+Gênese é um simulador evolutivo de civilização em 2D estilizado. O jogador acompanha uma colônia de criaturas que começa em estado primitivo — sem linguagem, sem cultura, com apenas instintos básicos — e evolui ao longo de eras em múltiplas dimensões simultâneas: biologia, comportamento individual e coletivo, comunicação, conhecimento, cultura, religião e organização sociopolítica.
+A premissa central, e o que distingue o jogo, é a relação de influência (não controle) entre o jogador e a civilização. O jogador nunca dá ordens diretas. Ele molda o ambiente, oferece estímulos e planta ideias — mas são as próprias criaturas que interpretam, segundo seus valores culturais do momento, o que aquilo significa. A mesma intervenção produz resultados radicalmente diferentes em culturas diferentes.
+O mundo, por sua vez, não é passivo: possui processos geográficos e climáticos naturais que o reformam por conta própria (Seção 5.2), independentemente do jogador. E como o jogador influencia observando, o jogo oferece um arsenal de formas de acompanhar a civilização — do mundo vivo a overlays, gráficos estatísticos e um &apos;lapso de evolução&apos; em GIF (Seção 9.5).
+Estrutura da documentação: este GDD é a base geral e a visão do jogo. Cada mecânica é detalhada exaustivamente — para implementação sem dúvidas — em um documento de mecânica próprio (M01, M02, …), referenciado ao longo deste texto. Quando uma mecânica depende de outra, a dependência é declarada explicitamente no cabeçalho do documento correspondente.
+1.3. Inspiração e tom
+A inspiração temática vem do universo de Black Mirror: Bandersnatch e seu spin-off Bandoletes, em particular a ideia perturbadora da ilusão de controle: o jogador acredita estar no comando, mas há sempre uma camada de imprevisibilidade e autonomia que escapa. O tom emocional do jogo nasce desse desconforto fértil — a sensação de ser um deus distante, poderoso e ao mesmo tempo impotente.
+O tom geral é contemplativo, melancólico e fascinante — mais próximo de um documentário sobre civilizações vistas de cima do que de um jogo de conquista. Há beleza e há tragédia; finais felizes não são garantidos, e talvez nem sejam o ponto.
+1.4. Pilares de design (princípios inegociáveis)
+Pilar
+O que significa na prática
+Influência, não controle
+Toda ação do jogador é uma sugestão mediada e interpretada pela civilização. Nunca um comando executado literalmente.
+Emergência genuína
+Comportamentos coletivos, cultura e história surgem da interação de regras simples — não de scripts pré-escritos. Nem os desenvolvedores preveem cada resultado.
+Imprevisibilidade significativa
+O caos não é aleatório-vazio: é causal mas complexo. Tudo tem explicação retrospectiva, nada é previsível à frente.
+Sem acaso arbitrário
+Nenhum número aleatório é consultado sem que sua distribuição derive inteiramente do estado do mundo. Não existe &apos;evento aleatório&apos;, só &apos;resultado incerto de causas conhecidas&apos;. (Ver 1.5.)
+Sem fim obrigatório
+A partida pode durar indefinidamente, transcender, estagnar ou terminar em tragédia. O fim trágico é um resultado legítimo, não um &apos;game over&apos; de falha.
+Profundidade de RPG sem avatar
+Centenas de estatísticas e traços que lembram a ficha de um RPG — mas aplicadas a um organismo coletivo, não a um herói.
+Legibilidade do estilizado
+O visual 2D estilizado existe para tornar sistemas complexos legíveis e belos, não para realismo.
+1.5. Princípio de causalidade (estocasticidade sem arbitrariedade)
+Este é um princípio de fundo que vale para TODAS as mecânicas do jogo e para todos os documentos derivados. É a regra que separa um simulador inteligente de um cassino disfarçado.
+Nenhum número aleatório é consultado sem que sua distribuição de probabilidade seja inteiramente derivada do estado atual do mundo. Todo resultado precisa ser explicável em retrospecto apontando para as causas que o produziram. Não existe &apos;evento aleatório&apos;: existe &apos;resultado incerto de causas conhecidas&apos;.
+A distinção prática, que todo desenvolvedor deve internalizar:
+PROIBIDO — acaso arbitrário
+PERMITIDO — incerteza causal
+&apos;10% de chance de seca neste turno.&apos;
+A seca emerge de clima + uso de água + cobertura vegetal; sua probabilidade é uma função desse estado.
+Sortear um evento de uma lista fixa.
+O evento se torna possível porque o estado do mundo cruzou um limiar; qual resposta ocorre depende de estatísticas e cultura.
+Mutação que ignora o ambiente.
+Mutação cuja taxa vem do ambiente e cuja sobrevivência vem da aptidão no nicho (Seção 3.2).
+Dano de combate = número aleatório plano.
+Resultado de combate = função de traços, números, terreno, moral e cultura, com variação residual pequena e justificada.
+O papel do acaso permitido é ser matéria-prima da evolução: ele gera variação (mutações, microdecisões individuais) sobre a qual causas determinísticas (seleção, cultura, ambiente) agem. A inteligência do sistema está em que toda distribuição tem uma razão rastreável — nunca em fingir que o mundo é um relógio perfeito. Cada documento de mecânica traz uma subseção &apos;Causalidade&apos; explicitando de onde vêm suas probabilidades.
+2. A fantasia do jogador e o loop central
+2.1. Quem é o jogador na ficção
+O jogador não tem corpo, nome ou rosto dentro do mundo. Ele é uma presença ambígua — as criaturas podem, com o tempo, perceber que &apos;algo&apos; as observa e influencia, e interpretar essa presença de formas próprias: um deus, um clima, uma sorte, um inimigo, uma musa. Como a civilização entende o jogador é, em si, parte da cultura emergente.
+2.2. Verbos do jogador (o que se pode realmente fazer)
+O jogador age através de três alavancas, todas indiretas e custosas. Detalhamento completo na Seção 5.
+Moldar o ambiente: alterar clima, recursos, geografia e perigos. Pressão, não ordem.
+Intervir pontualmente (&quot;nudges&quot;): gastar um recurso limitado para enviar sinais, proteger indivíduos, intensificar mutações ou plantar ideias.
+Direcionar a atenção: onde o jogador observa de perto influencia sutilmente o que floresce ali (o observador altera o observado).
+2.3. O loop central de jogo
+Fase
+O que o jogador faz
+O que o jogo devolve
+Observar
+Acompanha a civilização viva, lê estatísticas, identifica tendências e tensões.
+Eventos emergentes, mudanças visuais, surgimento de Figuras notáveis.
+Interpretar
+Forma hipóteses sobre o que está acontecendo e por quê.
+Pistas culturais, padrões de migração, sinais de conflito ou inovação.
+Influenciar
+Escolhe uma alavanca e gasta recursos para empurrar a trajetória.
+A civilização interpreta e responde — às vezes como esperado, às vezes não.
+Conviver com a consequência
+Lida com efeitos de segunda e terceira ordem ao longo de gerações.
+Ramificações imprevistas, novos dilemas, deriva cultural.
+2.4. Escalas de tempo
+O jogo opera em camadas de tempo que o jogador pode acelerar, desacelerar ou pausar. A maior parte do tempo o jogo roda em velocidade acelerada, com o jogador intervindo em momentos-chave.
+Escala
+Unidade
+O que muda nela
+Tique
+Segundos/minutos
+Ações individuais: forragear, lutar, acasalar, construir.
+Geração
+Minutos de jogo
+Herança de traços, mudança populacional, transmissão cultural.
+Era
+Sessões
+Saltos qualitativos: linguagem, agricultura, escrita, especiação.
+Epopeia
+Toda a partida
+O arco completo: nascimento, auge, divergência, destino final.
+3. Os eixos de evolução
+A evolução acontece em camadas paralelas e interdependentes. Nenhuma é uma &apos;árvore de tecnologia&apos; linear: cada uma é uma teia de possibilidades onde o que se destrava depende do estado de todas as outras. Uma cultura que venera os mortos pode chegar à medicina por um caminho totalmente diferente de uma cultura guerreira.
+3.1. Biológico
+A camada física e genética das criaturas. Muda por mutação (parcialmente aleatória) sob pressão seletiva (parcialmente influenciável pelo jogador via ambiente).
+Metabolismo, dieta, resistência a clima e doenças.
+Sentidos: visão (incluindo espectro de cores percebido), audição, olfato, sentidos exóticos.
+Morfologia visível: cor, textura da pele/pelo, forma corporal, tamanho, apêndices, dimorfismo entre indivíduos.
+Longevidade e ciclo reprodutivo.
+Importante: mudanças biológicas alteram diretamente a aparência das criaturas na tela. Uma população que evolui em clima frio pode ficar maior, mais peluda e de cores diferentes — visível para o jogador.
+3.2. Mutações e especiação
+Este é o motor biológico que faz a vida do jogo realmente evoluir, em vez de apenas variar. A especiação — o surgimento de uma nova espécie — não é um evento roteirizado nem um botão: é o resultado acumulado de mutações que o isolamento preserva e que a seleção amplifica até que o cruzamento entre duas populações deixe de ser possível ou viável. O sistema é desenhado para que o jogador entenda, em retrospecto, por que duas linhagens se tornaram irreconciliáveis.
+Como funciona uma mutação
+Cada criatura possui um genoma — um conjunto de valores que descrevem biologia (Seção 3.1) e predisposições comportamentais (Seção 3.3). Na reprodução, o filhote herda uma combinação dos genomas dos pais, com uma pequena chance de mutação em cada gene. A maioria das mutações é neutra ou levemente prejudicial; raras são vantajosas. O jogador não cria mutações específicas — só pode, via a &apos;Faísca de mutação&apos; (Seção 5.2), elevar a taxa geral numa população, sem escolher o resultado.
+Tipo de mutação
+Efeito típico
+Papel na evolução
+Neutra
+Muda algo sem impacto na sobrevivência (ex.: tom de cor).
+Acumula &apos;deriva&apos; silenciosa; base da divergência visível entre populações.
+Deletéria
+Reduz aptidão (saúde, fertilidade, etc.).
+Em geral some por seleção; em populações pequenas pode persistir por acaso.
+Vantajosa
+Aumenta aptidão num dado ambiente.
+Espalha-se pela população ao longo de gerações; motor da adaptação.
+Condicional
+Boa num ambiente, ruim em outro.
+Fonte-chave de divergência: a mesma mutação separa populações em ambientes distintos.
+Os quatro ingredientes da especiação
+Para que uma população se torne uma espécie nova, quatro forças precisam atuar em conjunto ao longo de muitas gerações. O jogo modela todas as quatro, e o jogador pode influenciar cada uma indiretamente.
+Variação: mutação contínua produz diferenças genéticas dentro da população. Sem variação, não há matéria-prima para divergir.
+Isolamento: duas porções da população deixam de cruzar entre si. Pode ser geográfico (uma montanha, um rio seco, um oceano), comportamental (rituais de acasalamento divergentes) ou cultural (tabu contra unir-se ao &apos;outro&apos;). Sem isolamento, o fluxo de genes mistura tudo de volta e impede a separação.
+Seleção divergente: as duas porções vivem sob pressões diferentes (climas, predadores, dietas distintas), de modo que mutações vantajosas de um lado são neutras ou ruins do outro. As populações &apos;puxam&apos; para direções genéticas opostas.
+Tempo / deriva: geração após geração, as diferenças se somam. Em populações pequenas, o acaso (deriva genética) acelera a divergência mesmo sem pressão seletiva.
+O limiar de incompatibilidade
+O jogo mantém, para cada par de populações isoladas, uma distância genética que cresce conforme variação, seleção e deriva acumulam diferenças. Enquanto a distância é baixa, as populações são a mesma espécie e podem voltar a cruzar livremente (e se reencontrarem, o fluxo de genes as funde de novo). Ao ultrapassar um limiar de incompatibilidade, o cruzamento passa a ser progressivamente inviável:
+Primeiro, híbridos nascem mais raros ou menos férteis (zona cinzenta — ainda reversível com esforço).
+Depois, o cruzamento deixa de produzir prole viável: a especiação se consolidou e é irreversível.
+A partir daí, as duas linhagens evoluem em separado para sempre — são espécies distintas que podem competir, coexistir, predar-se ou ignorar-se.
+Um grupo migra para além de uma cordilheira que o jogador fez surgir. Lá, o clima é mais frio: ao longo de centenas de gerações, mutações que favorecem corpo maior e pelo denso se acumulam (seleção divergente), enquanto a montanha impede qualquer cruzamento com o grupo original (isolamento). Quando um descendente finalmente cruza de volta a serra, encontra criaturas que já não reconhece como parceiras — e talvez nem como parentes. Nasceu uma espécie nova, e o jogador pode reconstruir exatamente por quê.
+Tipos de especiação no jogo
+Modo
+Gatilho do isolamento
+Sabor de jogo
+Geográfica
+Barreira física separa populações (montanha, mar, deserto, seca).
+O modo mais comum; muitas vezes consequência indireta da Pressão Ambiental do jogador.
+Comportamental
+Mutações em rituais/sinais de acasalamento divergem; os grupos deixam de se &apos;cortejar&apos;.
+Especiação sem barreira física — populações vizinhas que simplesmente param de se reconhecer.
+Cultural
+Tabu, religião ou identidade impõem que não se cruze com o &apos;outro&apos;.
+Ponte única do jogo: a cultura (Seção 3.7) força divergência biológica real ao longo do tempo.
+Por deriva (fundadora)
+Um grupo minúsculo se separa e o acaso fixa traços raros rapidamente.
+Especiação veloz e imprevisível; uma cisão social pode bastar para iniciá-la.
+Como o jogador influencia a especiação
+Coerente com o pilar &apos;influência, não controle&apos;, o jogador nunca declara &apos;criar nova espécie&apos;. Ele pode apenas ajustar os ingredientes e esperar:
+Forçar isolamento: via Pressão Ambiental, erguer barreiras ou esgotar recursos que partem a população em dois.
+Acelerar a variação: via Faísca de mutação, elevar a taxa de mutação numa população isolada (sem escolher quais mutações surgem).
+Intensificar a seleção divergente: tornar os dois ambientes mais diferentes (um frio, outro árido), puxando as linhagens para lados opostos.
+Ou impedir a especiação: remover barreiras e religar populações antes do limiar, deixando o fluxo de genes fundi-las de novo.
+Conexão com o resto do jogo: a especiação alimenta diretamente o sistema de múltiplas civilizações (Seção 7) e os finais de Diáspora e divergência (Seção 6). Uma única civilização pode, com tempo e isolamento, dar origem a duas espécies que mais tarde comerciam, se cruzam (enquanto ainda compatíveis), se fundem ou entram em guerra — toda a teia social do jogo brota, na raiz, deste motor biológico.
+3.3. Comportamento individual
+Cada criatura carrega um &apos;genoma comportamental&apos;: um conjunto de predisposições levemente variáveis que determinam como ela age. Esses traços são herdáveis e mutáveis (Seção 3.2).
+Média coletiva da espécie: cada traço abaixo existe no nível do indivíduo, mas o jogo calcula e exibe a média (e a dispersão) de cada traço para toda a população. É dessa média coletiva que emergem os comportamentos de grupo (Seção 3.4) e várias macro-estatísticas (Seção 4.3). O detalhamento completo de cada traço, faixas, herança, efeitos e fórmulas está no documento de mecânica dedicado (ver M02 — Traços Comportamentais).
+Traço individual
+Vai de…
+…a
+Medo / Coragem
+Foge de tudo, evita risco
+Enfrenta perigos, explora o desconhecido
+Curiosidade
+Ignora novidades
+Investiga, experimenta, inova
+Agressividade
+Pacífico, submisso
+Violento, dominante
+Altruísmo / Egoísmo
+Acumula para si
+Sacrifica-se pelo grupo
+Sociabilidade
+Solitário
+Busca companhia e cooperação
+Territorialidade
+Indiferente a fronteiras
+Defende e expande território
+Exploração
+Permanece no conhecido
+Sai em busca do desconhecido
+Capacidade de aprendizagem
+Aprende devagar
+Aprende rápido com experiência e com os outros
+Flexibilidade comportamental
+Rígido, repete padrões
+Adapta a conduta à situação
+Neofilia / Neofobia
+Teme o novo (neofobia)
+Atraído pelo novo (neofilia)
+Vigilância
+Desatento ao entorno
+Alerta constante a ameaças e mudanças
+Seletividade de parceiros
+Acasala indiscriminadamente
+Escolhe parceiros por critérios fortes
+Competição sexual
+Sem disputa por acasalamento
+Disputa intensa (geração de &apos;alfas&apos;)
+Investimento parental
+Abandona a prole
+Cuida intensamente dos filhotes
+Dominância / Submissão
+Submisso, cede
+Dominante, impõe-se
+Tendência cooperativa
+Age sozinho
+Coopera e coordena com o grupo
+Pendor de liderança
+Segue
+Conduz e organiza o coletivo
+Ousadia alimentar
+Come só o familiar e seguro
+Experimenta alimentos novos e arriscados
+Armazenamento de recursos
+Consome tudo no momento
+Estoca comida e recursos para depois
+Fidelidade local / Dispersão
+Apega-se ao território natal
+Dispersa-se para longe ao amadurecer
+Nomadismo
+Sedentário, fixa-se
+Move-se continuamente, sem assentar
+Memória
+Esquece rápido
+Retém lugares, indivíduos e eventos
+Planejamento de longo prazo
+Vive o imediato
+Age pensando no futuro
+Esses traços não agem isolados: combinam-se. Alta exploração + alta neofilia + baixa fidelidade local tende a produzir uma espécie expansionista e dispersora; alta vigilância + neofobia + alto armazenamento produz uma espécie cautelosa e acumuladora. As interações entre traços estão tabeladas em M02.
+3.4. Comportamento coletivo (emergente)
+Esta camada não é programada diretamente — ela emerge da interação de muitos indivíduos seguindo regras simples. Bandos, hierarquias, divisão de trabalho, rituais e tradições surgem &apos;sozinhos&apos; a partir dos traços individuais predominantes na população.
+Exemplo: se indivíduos altruístas e sociáveis predominam, surge espontaneamente partilha de comida e cuidado coletivo da prole. Se agressivos e territoriais predominam, surgem hierarquias de dominância e defesa de fronteiras. Ninguém programou &apos;criar uma hierarquia&apos; — ela emergiu.
+3.5. Comunicação e linguagem
+Talvez o sistema mais distintivo do jogo. A comunicação evolui em estágios e é gerada proceduralmente, divergindo entre populações isoladas.
+Estágio
+Forma
+Capacidade desbloqueada
+Pré-verbal
+Cor corporal, postura, cheiro, toque
+Sinalizar perigo, disposição, território, acasalamento
+Protossom
+Vocalizações simples, gestos
+Coordenar caça, alertas específicos, chamados individuais
+Protolinguagem
+Léxico de poucas dezenas de &apos;palavras&apos;
+Nomear coisas, dar ordens simples, ensinar
+Gramática
+Combinação de símbolos com regras
+Falar do passado/futuro, do abstrato, do hipotético
+Escrita
+Registro visual durável
+Acumular conhecimento entre gerações, leis, história, contratos
+Deriva linguística: populações que se separam desenvolvem idiomas diferentes ao longo do tempo. Quando voltam a se encontrar, podem não se entender — fonte de conflito, comércio difícil ou fascínio mútuo. A comunicação não-verbal (cor/postura) também diverge: o que significa &apos;amizade&apos; numa população pode significar &apos;ameaça&apos; em outra.
+3.6. Cognição e conhecimento
+O acúmulo de saber: matemática, astronomia, engenharia, medicina, agricultura, metalurgia. Cada campo destrava capacidades e construções. O conhecimento depende de cultura (uma cultura que proíbe dissecar mortos terá medicina mais lenta) e de comunicação (sem escrita, o saber se perde entre gerações).
+3.7. Cultura
+A camada mais imprevisível e mais poderosa. Cultura é o conjunto de valores, crenças, mitos, tabus, arte e rituais compartilhados. Ela funciona como uma &apos;lente&apos; que filtra e reinterpreta tudo o mais — inclusive as intervenções do jogador.
+Religião e mitologia: explicações do mundo, incluindo possivelmente o próprio jogador.
+Valores e tabus: o que é sagrado, o que é proibido (guerra, incesto, certos alimentos, certas cores).
+Arte: padrões visuais, música, dança — visíveis nas construções e ornamentos.
+Tradições e ritos: nascimento, morte, passagem, colheita.
+A cultura pode tornar a guerra sagrada ou abominável; o jogador, divino ou demoníaco; o forasteiro, irmão ou inimigo. Duas civilizações com a mesma biologia podem ter destinos opostos por pura divergência cultural.
+3.8. Religião
+A religião é um eixo de evolução próprio — derivado da cultura (Seção 3.7), mas com peso e dinâmica suficientes para ser tratado à parte. Ela nasce da necessidade da espécie de explicar o inexplicável: a morte, os astros, as catástrofes e, de forma central neste jogo, a própria presença do jogador. A religião não é decorativa: ela reescreve as prioridades da civilização e é o filtro mais forte sobre as intervenções do jogador (Seção 5.3).
+Origem causal (sem acaso arbitrário, Seção 1.5): uma religião não &apos;surge sorteada&apos;. Ela cristaliza quando eventos não explicados pelo conhecimento atual (uma seca, um Sinal do jogador, a morte de uma Figura) precisam de sentido, e a explicação que vinga é a que melhor se ajusta aos valores culturais e à experiência acumulada da população. O mesmo eclipse gera um culto solar numa cultura e um tabu do medo em outra.
+A religião evolui em estágios, cada um destravando capacidades sociais e cognitivas:
+Estágio
+Forma
+Efeito na civilização
+Animismo difuso
+Forças e lugares têm &apos;espírito&apos;; sem doutrina.
+Primeiros tabus e ritos; coesão local.
+Mito e panteão
+Narrativas e entidades nomeadas explicam o mundo.
+Identidade compartilhada; moral codificada em histórias.
+Culto organizado
+Sacerdócio, templos, calendário ritual.
+Poder institucional; canaliza recursos e mão de obra.
+Doutrina e escritura
+Crença registrada por escrito, dogmas, ortodoxia.
+Transmissão estável; cismas possíveis; lei sacralizada.
+Teologia abstrata
+Reflexão sobre princípios, ética, metafísica.
+Ponte para filosofia e ciência — ou freio sobre elas.
+Dimensões que o jogo rastreia em qualquer religião (todas com média coletiva e detalhamento em documento próprio):
+Fervor: quão intensamente a crença guia decisões (alto fervor amplifica e distorce as intervenções do jogador).
+Dogmatismo vs. abertura: rigidez da doutrina; afeta inovação, cismas e tolerância a forasteiros.
+Organização: de espontânea a hierárquica institucional; define poder político do clero.
+Imagem do jogador: como a presença do jogador é interpretada — deus benevolente, trapaceiro, força da natureza, demônio.
+Conteúdo moral: o que a religião sacraliza ou proíbe (guerra, dispersão, certos alimentos, especiação/mistura com outra espécie).
+Acoplamentos importantes: a religião realimenta a Atenção do jogador (mais crença pode ampliar o recurso, Seção 5.1), pode sacralizar ou proibir a mistura entre populações (influenciando a especiação, Seção 3.2), e é uma causa frequente de guerra, cisma e fusão entre civilizações (Seção 7). É também um dos motores de finais como transcendência ou estagnação (Seção 6.4).
+3.9. Sociopolítico e economia
+A organização da sociedade, que escala conforme a população e o conhecimento crescem.
+Nível
+Característica
+Surge quando…
+Bando
+Dezenas de indivíduos, liderança informal
+Estado inicial
+Tribo
+Centenas, identidade compartilhada, ritos
+Linguagem + cultura emergem
+Aldeia / Cidade
+Assentamento fixo, divisão de trabalho
+Agricultura + construção
+Estado
+Milhares, instituições, leis, território definido
+Escrita + hierarquia estável
+Federação / Império
+Múltiplas cidades sob um sistema
+Conquista ou união pacífica
+A economia evolui de partilha direta → escambo → moeda → mercados → sistemas complexos. Recursos têm escassez real, e a forma como a sociedade os distribui (igualitária ou hierárquica) é uma estatística emergente que realimenta a cultura.
+4. O sistema de estatísticas (sabor RPG)
+O jogo expõe centenas de números, em dois níveis. O princípio fundamental: as estatísticas macro (da civilização) emergem das micro (dos indivíduos). O jogador nunca define um valor diretamente — ele observa, e influencia as condições que farão o número subir ou descer.
+4.1. Estatísticas do indivíduo (micro)
+Cada criatura tem uma &apos;ficha&apos; composta de três blocos: genética (herdada), traços adquiridos (aprendidos na vida) e papel social (posição no grupo). Indivíduos são simulados o suficiente para que alguns se destaquem.
+Bloco
+Exemplos de atributos
+Genética
+Força, velocidade, percepção sensorial, fertilidade, longevidade, resistência a doença, predisposições comportamentais.
+Adquirido
+Habilidades aprendidas (caça, construção, cura), conhecimento, idioma(s) dominado(s), traumas e memórias marcantes.
+Social
+Prestígio, posição na hierarquia, papel (caçador, curandeiro, líder, artista), relações (aliados, rivais, parentes).
+4.2. Figuras notáveis
+De tempos em tempos, a combinação de genética, circunstância e acaso produz uma Figura: um indivíduo excepcional — um profeta, inventor, tirano, artista ou líder — capaz de alterar a trajetória de toda a civilização. Figuras têm nome (gerado no idioma local), história e podem ser protegidas ou negligenciadas pelo jogador. A morte prematura de uma Figura é um dos momentos mais consequentes do jogo.
+4.3. Estatísticas da civilização (macro)
+Estes valores emergem da média e da distribuição dos indivíduos, e da cultura acumulada. São o &apos;painel&apos; principal do jogador.
+Estatística
+O que mede
+Efeitos quando alta
+Agressividade
+Disposição a usar violência
+Mais conflito, conquista, instabilidade interna
+Expansionismo
+Impulso de ocupar território
+Crescimento territorial, choque com vizinhos, sobre-extensão
+Taxa reprodutiva
+Velocidade de crescimento populacional
+Boom populacional, pressão sobre recursos, fome potencial
+Coesão social
+União interna do grupo
+Estabilidade, eficiência; baixa coesão gera cisões
+Abertura / Xenofobia
+Postura ante o diferente
+Alta abertura: comércio e fusão; alta xenofobia: isolamento e guerra
+Inovação
+Ritmo de descobertas
+Avanço tecnológico rápido, mas possível instabilidade cultural
+Religiosidade
+Peso do sagrado nas decisões
+Coesão e tabus fortes; pode frear ou guiar a ciência
+Igualitarismo
+Distribuição de poder e recursos
+Alto: estabilidade e moral; baixo: produtividade desigual e revolta
+Sustentabilidade
+Equilíbrio com o ambiente
+Baixa sustentabilidade aproxima o colapso ecológico
+Moral coletiva
+Bem-estar e satisfação geral
+Alta moral: produtividade e lealdade; baixa: deserção, revolta
+Estabilidade
+Resistência a colapso interno
+Baixa estabilidade precede guerras civis e cisões/especiação
+Curiosidade coletiva
+Vontade de explorar o desconhecido
+Exploração, contato com outros, risco e descoberta
+Estas são exemplos representativos; o desenho final prevê dezenas de estatísticas adicionais e derivadas (ex.: belicismo naval, pietas funerária, complexidade artística), muitas das quais só se revelam ao jogador quando a civilização atinge certos marcos.
+5. O sistema de influência do jogador
+Este é o coração mecânico do jogo e o que materializa o pilar &apos;influência, não controle&apos;. O jogador dispõe de um recurso central limitado e de três alavancas. Toda ação é interpretada pela civilização, nunca executada literalmente.
+5.1. O recurso central: Atenção
+A Atenção é o recurso que o jogador gasta para intervir. Ela se regenera lentamente com o tempo e pode ser ampliada conforme a civilização &apos;crê&apos; mais na presença do jogador (um laço temático com a religiosidade emergente). Atenção escassa força o jogador a escolher poucos momentos realmente importantes — reforçando a impotência deliberada do design.
+5.2. As três alavancas
+Alavanca 1 — Pressão ambiental
+O jogador altera o mundo, não as criaturas. As criaturas reagem por conta própria.
+Mudar clima (esfriar, aquecer, chuvas, secas).
+Mover ou esgotar recursos (secar um rio, fazer brotar um bosque).
+Introduzir perigos ou alívios (predadores, doenças, abrigos naturais).
+Reformar a geografia em grande escala (custo altíssimo).
+Secar o rio principal não diz à civilização o que fazer. Ela pode migrar, pode inventar irrigação, pode entrar em guerra com o vizinho pela água, pode rezar e estagnar, pode se dividir. O jogador criou a pressão; a resposta é deles.
+Alterações geográficas naturais (sem jogador): o mundo não fica inerte à espera do jogador. Ele possui processos geológicos e climáticos próprios que reformam o ambiente de forma autônoma e causal — nunca por sorteio (Seção 1.5), mas por simulação de longo prazo: erosão que abre ou fecha vales, rios que mudam de curso ao assorear, avanço e recuo de florestas e desertos, vulcanismo e terremotos onde há tensão acumulada, glaciação e degelo conforme ciclos de clima, subida e descida do nível do mar. Essas mudanças são uma das principais fontes naturais de isolamento e, portanto, de especiação (Seção 3.2): uma cordilheira que se ergue ou um mar que invade podem partir uma população em duas sem que o jogador mova um dedo. O jogador pode acelerar, frear ou redirecionar esses processos, mas eles existem independentemente dele.
+Alavanca 2 — Intervenção pontual (&quot;nudges&quot;)
+Estímulos diretos mas interpretáveis, pagos em Atenção.
+Nudge
+O que faz
+Por que é incerto
+Sinal
+Envia um estímulo (luz, som, aparição) num local.
+A civilização interpreta segundo sua cultura: presságio, deus, ameaça…
+Proteção
+Reduz o risco sobre um indivíduo ou local por um tempo.
+Pode salvar uma Figura — ou um futuro tirano.
+Faísca de mutação
+Aumenta a taxa de mutação numa população.
+Mutações são aleatórias: pode trazer dádiva ou doença.
+Semente de ideia
+Planta uma inclinação cognitiva ou cultural difusa.
+Pode germinar, ser distorcida, ou ser rejeitada como tabu.
+Inspiração
+Eleva a chance de surgir uma Figura numa geração.
+Não escolhe quem, nem que tipo de Figura surgirá.
+Alavanca 3 — Direcionamento de atenção
+Onde o jogador mantém o olhar (a câmera/foco) tem um efeito sutil e acumulativo sobre o que se desenvolve ali — uma metáfora jogável do observador que altera o observado. Regiões observadas de perto tendem a ter mais &apos;densidade de eventos&apos; e maior chance de Figuras emergirem. Mecânica opcional, mas tematicamente central para a inspiração Black Mirror.
+5.3. A regra de ouro: tudo é interpretado
+Nenhuma intervenção tem efeito fixo. Cada uma passa por um &apos;filtro cultural&apos; antes de produzir resultado. O mesmo Sinal luminoso pode ser, para uma civilização, um chamado divino que inicia uma peregrinação; para outra, um mau presságio que provoca pânico; para outra ainda, um fenômeno natural curioso que estimula a astronomia. O jogador aprende, com o tempo, a &apos;conversar&apos; com a cultura específica daquela partida — mas nunca a dominá-la.
+6. Emergência, imprevisibilidade e finais
+6.1. Por que nada é previsível
+A imprevisibilidade do jogo não vem de aleatoriedade vazia, e sim de complexidade causal. Sistemas simples interagindo geram resultados que ninguém consegue prever à frente, mas que sempre fazem sentido em retrospecto. Os principais geradores de imprevisibilidade:
+Agentes autônomos: cada indivíduo decide por si segundo seus traços, e o coletivo emerge dessas decisões.
+Filtro cultural: a cultura reinterpreta toda entrada (ambiente, intervenção, encontro) de modo dependente de seu estado atual.
+Efeitos de segunda e terceira ordem: cada mudança propaga consequências através de todas as camadas ao longo de gerações.
+Acaso significativo: mutações, mortes e nascimentos de Figuras introduzem pontos de virada genuínos.
+6.2. Eventos com ramificação dependente de estado
+O jogo possui um repertório de &apos;situações&apos; que se resolvem de forma diferente conforme o estado da civilização. Não são roteiros: são gatilhos cujas saídas dependem das estatísticas e da cultura.
+Uma seca prolongada numa civilização xenófoba e agressiva → guerra por recursos com o vizinho. A mesma seca numa civilização aberta e curiosa → fusão pacífica de tribos em torno do último poço. A mesma seca numa civilização muito religiosa → sacrifícios rituais e estagnação. Mesmo gatilho, três histórias.
+6.3. Especiação e divergência
+Quando uma população fica isolada — por geografia, por cultura ou por cisão social — ela acumula divergências biológicas, linguísticas e culturais. Passado um limiar, deixa de ser &apos;a mesma&apos; civilização ou mesmo a mesma espécie. A partir daí pode haver reencontro, e o reencontro pode ser de qualquer tipo: reconhecimento fraterno, estranhamento, comércio, predação ou guerra.
+O mecanismo biológico completo por trás da divergência de espécie — mutação, isolamento, seleção divergente, deriva e o limiar de incompatibilidade — está detalhado na Seção 3.2 (Mutações e especiação). Aqui interessa a consequência social: cada divergência consolidada multiplica os atores do mundo e abre novas histórias de contato.
+6.4. Finais possíveis
+O jogo não tem &apos;vitória&apos;. Tem destinos. Nenhum é imposto; todos emergem.
+Destino
+Como se chega
+Tom
+Transcendência
+Avanço cognitivo/tecnológico extremo; a civilização supera sua forma biológica.
+Sublime, ambíguo
+Estagnação eterna
+Equilíbrio estável sem mais evolução; a civilização &apos;congela&apos; próspera ou medíocre.
+Melancólico, pacífico
+Colapso ecológico
+Sustentabilidade ignorada; o ambiente se esgota e a população desaba.
+Trágico, evitável
+Autodestruição
+Guerra interna ou entre civilizações leva à aniquilação mútua.
+Trágico, sombrio
+Absorção
+Outra civilização a conquista ou a integra completamente.
+Agridoce
+Diáspora
+A civilização se fragmenta e se espalha, perdendo identidade comum.
+Melancólico
+Continuidade
+A partida segue indefinidamente, sempre mudando, sem fim definido.
+Aberto
+7. Outras civilizações e interação
+7.1. Civilizações controladas pela IA
+O mundo pode conter outras civilizações que não são scripts: rodam pelas mesmas regras da civilização do jogador, com seus próprios valores emergentes e (na ficção) seu próprio &apos;jogador&apos; simulado influenciando-as. Podem ser da mesma espécie de origem — e ter divergido — ou de espécies independentes surgidas em outras regiões do mundo.
+7.2. Tipos de interação entre civilizações
+Interação
+Descrição
+Depende de…
+Comércio
+Troca de recursos, bens e conhecimento.
+Abertura, complementaridade econômica
+Intercâmbio cultural
+Adoção de ideias, arte, religião, palavras de outra civilização.
+Curiosidade, contato pacífico
+União / Fusão
+Duas civilizações se tornam uma, por aliança, casamento de elites ou necessidade.
+Coesão, valores compatíveis
+Mistura genética
+Cruzamento entre populações (se biologicamente compatíveis).
+Proximidade, abertura, compatibilidade
+Vassalagem
+Uma se submete à outra mantendo identidade parcial.
+Diferença de poder, pragmatismo
+Guerra
+Conflito armado por território, recursos, religião ou vingança.
+Agressividade, escassez, xenofobia
+Conquista / Genocídio
+Eliminação ou absorção forçada de outra civilização.
+Agressividade extrema, ideologia
+Indiferença
+Coexistência sem contato significativo.
+Distância, isolamento
+Interações sexuais/reprodutivas, econômicas e bélicas são todas tratadas como vetores de troca e mistura — de genes, bens, ideias ou violência — e qualquer encontro entre civilizações pode envolver várias delas ao mesmo tempo (comércio que vira casamento que vira aliança, ou aliança que se rompe em guerra).
+8. Direção visual e arte
+8.1. Princípio visual
+Estilo 2D estilizado com criaturas animadas. O objetivo não é realismo, e sim tornar visíveis e belos os sistemas invisíveis. O jogador deve conseguir &apos;ler&apos; o estado de uma civilização batendo o olho na tela, antes mesmo de abrir qualquer painel de estatísticas.
+8.2. Referências de estilo
+Silhuetas limpas e expressivas (legibilidade acima de detalhe).
+Paleta que comunica estado: cores quentes para tensão/agressividade, frias para calma/declínio, saturação para vitalidade.
+Animação procedural simples (squash &amp; stretch, balanço) para dar vida sem custo de produção altíssimo.
+Estética que evoca ilustração e diorama vivo, vista de cima/lateral em ângulo suave.
+8.3. As criaturas evoluem visualmente
+Como a biologia muda de fato (Seção 3.1), as criaturas mudam de aparência ao longo da partida — e isso é um dos prazeres visuais centrais. O sistema de arte das criaturas é modular e parametrizado, de modo que genética e cultura se traduzam em pixels.
+Parâmetro visual
+Controlado por
+O que comunica
+Cor base do corpo
+Genética + ambiente
+População, adaptação climática, espécie
+Textura (pelo, escama, pele)
+Genética
+Linhagem, clima de origem
+Forma e silhueta
+Genética
+Espécie e divergência/especiação
+Tamanho
+Genética + nutrição
+Saúde, recursos, dimorfismo
+Ornamentos e pinturas
+Cultura
+Identidade tribal, papel social, rito
+Postura e cor de sinal
+Comunicação
+Emoção, intenção, mensagem não-verbal
+8.4. O ambiente como tela viva
+O ambiente também é estilizado e mutável, refletindo tanto a natureza quanto a marca da civilização sobre ela.
+Bioma muda de cor/textura com clima e estação.
+Construções refletem o estágio sociopolítico e o estilo artístico da cultura — duas civilizações constroem de formas visivelmente distintas.
+Território é marcado visualmente (fronteiras, totens, campos cultivados, estradas).
+Cicatrizes ambientais: desmatamento, poluição, campos de batalha permanecem visíveis e contam a história.
+8.5. Linguagem visual da informação
+Como o jogo expõe centenas de estatísticas, a interface precisa de uma camada visual que traduza dados em sensação. A proposta é uma dupla leitura: o mundo vivo (intuitivo, sempre presente) e painéis acessíveis sob demanda (precisos, opcionais).
+Sobreposições alternáveis (&apos;overlays&apos;) que pintam o mundo por estatística: mapa de calor de agressividade, de recursos, de densidade populacional, de divergência linguística.
+A própria escrita emergente da civilização aparece em construções e artefatos, ilegível ao jogador no início e gradualmente &apos;traduzível&apos;.
+Ícones e cores consistentes para emoções coletivas e eventos.
+8.6. Áudio (esboço)
+Trilha generativa e em camadas que responde ao estado da civilização — instrumentação cresce com a complexidade cultural. As vocalizações das criaturas evoluem junto com a linguagem: de grunhidos a &apos;fala&apos; procedural com fonemas próprios de cada idioma emergente. O som é mais um canal de leitura do estado do mundo.
+9. Experiência do jogador e interface
+9.1. Tensão emocional desejada
+A experiência-alvo é uma mistura de fascínio, ternura, responsabilidade e impotência. O jogador deve sentir apego à sua civilização e, ao mesmo tempo, a angústia de não poder protegê-la completamente. O momento emocional mais forte do jogo é quando uma intervenção bem-intencionada produz uma consequência trágica imprevista — e o jogador percebe que isso também é a verdade do design.
+9.2. Curva de aprendizado
+O jogo começa simples (poucas criaturas, poucos sistemas visíveis) e abre complexidade gradualmente, conforme a civilização evolui. Novos painéis, overlays e tipos de intervenção se revelam quando se tornam relevantes — o jogo ensina pela própria evolução da civilização, não por tutoriais separados.
+9.3. Telas e painéis principais
+Tela / painel
+Função
+Mundo vivo (principal)
+A simulação em tempo real; onde se observa e se intervém diretamente.
+Painel da civilização
+Macro-estatísticas, tendências, eventos recentes, estágio atual.
+Ficha de indivíduo / Figura
+Detalhe de uma criatura: genética, história, relações, papel.
+Códice / Cultura
+Crenças, tabus, mitos, idioma, arte acumulada — a &apos;enciclopédia viva&apos;.
+Mapa e overlays
+Visão ampla com sobreposições de dados alternáveis.
+Linha do tempo / Crônica
+A história narrada da partida: eras, marcos, Figuras, guerras, divergências.
+9.4. A Crônica
+Ao final (ou a qualquer momento) o jogo gera uma crônica narrativa da civilização — uma história única daquela partida, com nomes próprios no idioma emergente, marcos, tragédias e triunfos. É o artefato que o jogador compartilha e relembra; cada partida produz uma lenda diferente. Reforça a rejogabilidade e o tema da imprevisibilidade.
+9.5. Formas de observar a civilização
+Como o jogador influencia mas não controla, observar bem é metade do jogo. O jogo oferece vários instrumentos para entender o estado e a trajetória da civilização — cada um lendo os mesmos dados sob um ângulo diferente. Todos derivam do mesmo estado simulado; nenhum é decorativo.
+Instrumento
+O que mostra
+Quando é mais útil
+Mundo vivo
+A simulação em tempo real, com criaturas, ambiente e construções.
+Leitura intuitiva e contínua; sentir o &apos;humor&apos; da civilização.
+Overlays de dados
+O mapa repintado por uma estatística (agressividade, recursos, fé, idioma…).
+Localizar tensões e padrões espaciais num instante.
+Gráficos estatísticos
+Curvas de qualquer estatística ao longo do tempo; histogramas de dispersão de traços.
+Ver tendências, picos e quedas; comparar populações.
+GIF/linha do tempo de evolução
+Um &apos;lapso temporal&apos; compactado: a civilização e o mapa evoluindo em segundos.
+Captar de relance toda a trajetória — migrações, especiações, expansão/colapso.
+Crônica
+A história narrada em texto, com nomes próprios e marcos.
+Compreender o porquê dos eventos; compartilhar a partida.
+Ficha de Figura/indivíduo
+O detalhe de uma criatura: genoma, traços, história, relações.
+Investigar o papel de um indivíduo notável.
+Códice cultural/religioso
+Crenças, tabus, mitos, idioma e imagem do jogador acumulados.
+Entender o filtro que reinterpreta suas intervenções.
+Destaque — o &apos;lapso de evolução&apos; (GIF): a qualquer momento o jogador pode gerar uma animação compactada que mostra, em poucos segundos, como a civilização e o território chegaram ao estado atual — cores do bioma mudando, fronteiras avançando e recuando, populações se dividindo e migrando, espécies divergindo. É ao mesmo tempo ferramenta de leitura e artefato compartilhável, irmão visual da Crônica. O detalhamento de captura e renderização fica em documento de mecânica próprio.
+Princípio de leitura dupla: o mundo vivo e os overlays oferecem leitura intuitiva e imediata; gráficos, fichas e códice oferecem leitura precisa sob demanda. O jogador nunca é obrigado a abrir planilhas, mas pode descer ao detalhe sempre que quiser.
+10. Escopo, fases e riscos
+10.1. Abordagem recomendada: vertical antes de horizontal
+Dada a ambição do projeto, a recomendação é provar a emergência num escopo pequeno antes de expandir. Um protótipo que demonstre, de forma convincente, que comportamento coletivo e cultura emergem de regras simples vale mais do que muitas funcionalidades rasas. Se a emergência não &apos;cantar&apos; no pequeno, ela não cantará no grande.
+10.2. Fases sugeridas (alto nível)
+Fase
+Objetivo central
+Critério de sucesso
+Protótipo vertical
+Uma civilização, biologia + comportamento individual/coletivo emergente, 3 estatísticas, 1 alavanca de influência.
+Comportamento coletivo surge sozinho e responde à influência de forma legível e imprevisível.
+Camada de comunicação e cultura
+Linguagem procedural + filtro cultural sobre intervenções.
+A mesma intervenção gera respostas diferentes conforme a cultura.
+Múltiplas civilizações e especiação
+Civilizações IA, divergência, interações (comércio/guerra/fusão).
+Encontros entre civilizações produzem histórias variadas e não roteirizadas.
+Profundidade e finais
+Conjunto completo de estatísticas, eventos ramificados, destinos.
+Partidas distintas chegam a destinos distintos de forma orgânica.
+Polimento
+Direção de arte completa, áudio generativo, Crônica, UX.
+O estado do mundo é legível visualmente; a Crônica emociona.
+10.3. Principais riscos de design
+Risco
+Mitigação
+Emergência vira ruído ilegível
+Investir cedo em legibilidade visual e overlays; equilibrar caos e padrão.
+Jogador se sente impotente demais (frustração) em vez de fascinado
+Calibrar a Atenção e o feedback para que a influência seja perceptível, mesmo sem ser controle.
+Complexidade de sistemas explode o custo de produção
+Escopo vertical; sistemas paramétricos e modulares reutilizáveis (arte e regras).
+Linguagem/cultura procedural soa vazia ou aleatória
+Ancorar a geração em regras com sentido causal; sempre haver &apos;porquê&apos; por trás.
+Falta de objetivo deixa o jogador sem direção
+A Crônica e as Figuras dão metas emergentes e apego, substituindo a &apos;vitória&apos;.
+10.4. Próximos passos deste documento
+Validar a visão e os pilares com a equipe.
+Detalhar o sistema de comunicação/cultura procedural em documento próprio (é o maior diferencial e o maior risco).
+Especificar a arquitetura técnica de simulação de agentes (documento técnico separado, conforme combinado).
+Produzir um alvo visual (&apos;vertical slice&apos; de arte) de uma única cena para fixar a direção de arte.
+Construir o protótipo vertical da Fase 1 para provar a emergência.
+Fim do documento conceitual — Gênese v0.1

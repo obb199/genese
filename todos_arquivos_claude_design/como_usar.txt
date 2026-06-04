@@ -1,0 +1,83 @@
+# Gênese — Como usar as ferramentas
+
+Duas ferramentas interativas vivem no projeto como arquivos HTML. Abra no navegador — sem instalação.
+
+---
+
+## Biblioteca de Assets
+**Arquivo:** `genese-assets/Gênese - Biblioteca de Assets.html`
+
+A fonte de verdade visual do projeto. Contém todos os assets vetoriais produzidos, prontos para exportação.
+
+**Como navegar:** barra lateral à esquerda → clique na seção desejada. Em telas pequenas, use o dropdown no topo.
+
+### Seções disponíveis
+
+| Seção | O que tem |
+|---|---|
+| **Cores & Tokens** | Paleta-base (5 cores) + 6 rampas semânticas. Exporta `tokens.json` para Unity. |
+| **Ícones** | SVGs monocromáticos tingíveis em runtime. 6 famílias: recurso, nudge, toolbar, macro-estatística, evento, cursor. |
+| **Criatura paramétrica** | Builder interativo com 25+ parâmetros (forma, textura, olhos, boca, cauda, cor, ornamento…). Botão "Aleatório" gera combinações; "Reset" volta ao padrão. Role para baixo para ver as 4 poses e as 5 variações de silhueta. |
+| **Escrita procedural** | 6 estilos de glifos gerados algoritmicamente (angular, orgânica, radial, rúnica, cuneiforme, espiral). Cada civilização tem o seu. |
+| **Efeitos & partículas** | Pedra-coração, ondulação de nudge, pulso de sinal, raio do observador, chuva/neve/brasas. |
+| **Biomas — Flora & Props** | Sprites vetoriais isolados + cenas compostas por bioma. 17 biomas no total. |
+| **Construções modulares** | 11 estágios × 10 culturas + variante Ruínas. A mesma estrutura muda de aparência só pela paleta. |
+| **Marca & Molduras** | Logotipo, ícone do app e 3 molduras de HUD prontas para 9-slice no Unity. |
+| **Cartões de Destino** | 7 variantes de tela-resumo compartilhável (os destinos possíveis da civilização). |
+| **Exportar / Unity** | Botões de download dos SVGs + template de paleta em C# + checklist de pipeline. |
+
+---
+
+## Wireframes
+**Arquivo:** `genese-wireframes/Gênese - Wireframes.html`
+
+O mapa de telas e produção de arte. Placeholders tracejados indicam assets ainda a produzir; anotações explicam decisões de UX.
+
+**Como navegar:** barra lateral à esquerda → clique na folha desejada.
+
+### Tweaks (painel de ajustes)
+Aberto pelo ícone de ajuste no editor. Persiste entre sessões.
+
+- **Posição da barra de ferramentas** — compara inferior / centro / esquerda / direita na folha "Mundo Vivo (HUD)"
+- **Densidade** — regular ou compacta
+- **Anotações** — mostrar ou ocultar os callouts
+- **Tom do papel** — claro ou escuro
+
+### Folhas disponíveis
+
+**Telas de UI**
+- Mundo Vivo (HUD) — tela principal com Atenção, Ciclo, População e toolbar
+- Tela de Influência — 3 alavancas: pressão ambiental, nudges, direcionamento de atenção
+- Painel da Civilização — 12 macro-estatísticas + estágio + tendências
+- Ficha de Figura — identidade, genética e traços adquiridos de um indivíduo
+- Códice Cultural — cultura, religião e idioma emergente
+- Mapa + Overlays — visão ampla com 6 sobreposições de estatística
+- Crônica — história narrada da partida + GIF de evolução
+
+**Assets de arte**
+- Criaturas — sistema paramétrico, animações (P0/P1), ornamentos culturais
+- Ambiente & Biomas — tilesets, sazonais, fenômenos naturais
+- Construções & Território — progressão por estágio, variantes por cultura
+- Ícones & Overlays — catálogo completo com prioridades
+
+**Meta & Loja**
+- Escrita Procedural — glifos-base e regras por cultura
+- Artefatos Compartilháveis — moldura do GIF, layout da Crônica, cartões de destino
+- Marca, Loja & Onboarding — fluxo das 5 telas de primeira partida, 7 ideologias, checklist da loja
+
+### Como ler os placeholders
+- **Cor de fundo** = semântica do conteúdo (roxo = jogador, verde = vida, terracota = tensão, dourado = recurso, azul = dado)
+- **Pílula P0** = crítico para o primeiro build jogável
+- **Pílula P1** = necessário para o vertical slice
+- **Pílula P2** = complementar, pode vir depois
+
+---
+
+## Glossário rápido
+
+| Sigla | Documento |
+|---|---|
+| GDD | Game Design Document — mecânicas, sistemas, visão |
+| AA | Catálogo de Assets — o que precisa existir e em que prioridade |
+| DV | Design Visual — direção de arte, paleta, tipografia |
+| M01–M14 | Documentos de Mecânica — especificação detalhada de cada sistema |

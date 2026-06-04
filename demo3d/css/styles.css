@@ -1,0 +1,56 @@
+/* GÊNESE 3D — estilos do HUD do termômetro (Mundo Vivo) */
+:root{
+  --fundo:#1F2933; --vida:#2F6F62; --influencia:#8C5BAA; --tensao:#C0563A; --ui:#EAF2EF;
+  --painel:#231C30; --linha:#3a3350; --ink-soft:#9b93ad;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#0e0b13}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ui)}
+#app{position:fixed;inset:0}
+canvas{display:block}
+
+/* topo */
+.top{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;
+  padding:12px 18px;pointer-events:none;z-index:5;
+  background:linear-gradient(180deg,rgba(20,15,28,.85),rgba(20,15,28,0))}
+.top .brand{color:var(--influencia);font-weight:700;font-size:16px}
+.top h1{font-size:14px;margin:0;font-weight:600}
+.top .tag{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:#d9c9ef;border:1px solid #5a4a78;border-radius:20px;padding:3px 10px;background:rgba(140,91,170,.18)}
+.top .spacer{flex:1}
+.top .ciclo{font-family:var(--mono);font-size:12px;color:#cdbfe0}
+.top .ciclo b{color:#fff}
+
+/* painel HUD */
+.hud{position:fixed;top:64px;right:16px;width:272px;z-index:5;display:flex;flex-direction:column;gap:12px;
+  max-height:calc(100vh - 84px);overflow:auto}
+.card{background:rgba(35,28,48,.82);backdrop-filter:blur(6px);border:1px solid var(--linha);
+  border-radius:13px;padding:12px 13px}
+.card h3{margin:0 0 6px;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--ink-soft);font-family:var(--mono)}
+.card .lead{font-size:11.5px;color:var(--ink-soft);margin:0 0 9px;line-height:1.45}
+.at-wrap{display:flex;align-items:center;gap:10px}
+.atbar{flex:1;height:11px;border-radius:8px;background:#1a1426;overflow:hidden;border:1px solid var(--linha)}
+.atbar i{display:block;height:100%;width:62%;background:linear-gradient(90deg,#7C4DBE,#A07CC4);transition:width .3s}
+.atnum{font-family:var(--mono);font-size:12px;color:#C4A7E6;min-width:30px;text-align:right}
+.row{display:flex;gap:7px;flex-wrap:wrap}
+button.b{cursor:pointer;border:1px solid var(--linha);background:#332a44;color:var(--ui);
+  border-radius:9px;padding:7px 10px;font-size:12px;display:flex;align-items:center;gap:6px;transition:.15s}
+button.b:hover{border-color:var(--influencia);background:#3b3052}
+button.b.on{background:var(--influencia);border-color:#b890dd}
+select.sel{width:100%;background:#1a1426;color:var(--ui);border:1px solid var(--linha);
+  border-radius:9px;padding:7px;font-size:12.5px;margin-top:7px}
+select.sel:first-of-type{margin-top:0}
+.hint{font-size:10.5px;color:var(--ink-soft);margin-top:8px;line-height:1.4}
+.legend{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--ink-soft)}
+.legend div{display:flex;align-items:center;gap:8px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block;border:1px solid #00000040}
+
+.note{position:fixed;bottom:0;left:0;right:0;z-index:5;pointer-events:none;
+  padding:9px 18px;font-size:11px;color:#cbb6e6;font-family:var(--mono);
+  background:linear-gradient(0deg,rgba(20,15,28,.9),rgba(20,15,28,0))}
+.controls-hint{position:fixed;bottom:34px;left:18px;z-index:5;pointer-events:none;
+  font-size:11px;color:#9b93ad;font-family:var(--mono)}
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#9b93ad;font-family:var(--mono);font-size:13px;z-index:9}

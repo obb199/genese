@@ -1,0 +1,153 @@
+DV
+Design Visual
+Documento de Mecânica — Gênese
+Direção de arte e identidade — com espaços para suas imagens e referências
+Metadados e dependências
+Campo
+Valor
+Identificador
+DV
+Versão
+0.1
+Depende de
+GDD §8; GDD §9; M08; M13
+Alimenta / é usada por
+AA — Catálogo de Assets; E10 — Render, UX e Loja
+Referência no GDD
+§8; §9.5
+Princípio de causalidade (vale para todo o documento): nenhum número aleatório é consultado sem que sua distribuição derive do estado do mundo. Não há &apos;evento aleatório&apos;, só &apos;resultado incerto de causas conhecidas&apos; (GDD §1.5). Toda subseção &apos;Causalidade&apos; abaixo declara de onde vêm as probabilidades.
+Índice
+1. Como usar este documento
+Este é o documento de Design Visual (DV) de Gênese. Ele descreve em palavras toda a direção de arte e identidade visual do jogo, e foi estruturado para que você o complemente com imagens, moodboards e referências. Sempre que houver um quadro tracejado marcado &apos;[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]&apos;, cole ali a referência correspondente (concept art, screenshot de inspiração, paleta, etc.).
+Relação com os outros documentos: o GDD §8 estabelece a visão visual; este DV a detalha; a etapa E10 a implementa na Godot. Onde houver conflito, o DV é a fonte de verdade visual.
+Documento irmão — Catálogo de Assets (AA): enquanto este DV define o ESTILO, o documento AA (Catálogo de Assets de Arte) define a LISTA COMPLETA e a QUANTIDADE de tudo que precisa ser desenhado, com checklist e prioridades. Ao reunir referências aqui, use o AA como a lista mestra do que produzir. Os dois são entregues juntos a quem fizer o design final.
+2. Identidade e pilares visuais
+O estilo é 2D estilizado com criaturas animadas. A arte não busca realismo: ela existe para tornar legíveis e belos os sistemas invisíveis da simulação. O jogador deve &apos;ler&apos; o estado de uma civilização batendo o olho, antes de abrir qualquer painel.
+Pilar visual
+O que significa
+Legibilidade primeiro
+Silhuetas limpas e leitura instantânea acima de detalhe. Se a forma não comunica, ela é simplificada.
+Cor como informação
+A paleta comunica estado: quentes para tensão/agressividade, frias para calma/declínio, saturação para vitalidade.
+Diorama vivo
+Estética de ilustração e diorama, vista de cima em ângulo suave; um mundo-maquete que respira.
+Beleza melancólica
+Tom contemplativo (GDD §1.3): há ternura e tragédia; nada caricato, nada épico-heroico.
+Evolução visível
+O que muda na simulação muda na tela: criaturas e ambiente se transformam ao longo da partida.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Moodboard geral da identidade visual (3–6 referências que capturem o tom).
+3. Paleta de cores
+A paleta tem dois níveis: a paleta-base (identidade do jogo) e as paletas semânticas (cor com significado de dados, usadas em criaturas, ambiente e overlays).
+3.1. Paleta-base (sugestão inicial — ajustar com a direção de arte)
+Uso
+Cor sugerida (hex)
+Sensação
+Fundo / vazio
+#1F2933 (grafite)
+Calma, espaço para o mundo respirar
+Vegetação / vida
+#2F6F62 (verde-azulado)
+Vitalidade, biológico
+Influência do jogador
+#8C5BAA (roxo)
+Presença sobrenatural, a &apos;mão invisível&apos;
+Tensão / alerta
+#C0563A (terracota quente)
+Conflito, perigo
+Neutro claro / UI
+#EAF2EF
+Painéis e texto
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Sua paleta-base final (swatches) e variações claro/escuro.
+3.2. Paletas semânticas
+Cada estatística-chave tem uma rampa de cor consistente, usada igualmente nas criaturas (quando aplicável), no ambiente e nos overlays (M13), para o jogador aprender a &apos;ler&apos; o mundo.
+Significado
+Rampa (baixo → alto)
+Agressividade
+Cinza-azulado → vermelho intenso
+Vitalidade / saúde
+Cinza pálido → verde saturado
+Recursos
+Marrom seco → dourado abundante
+Fé / religiosidade
+Neutro → roxo luminoso
+Divergência linguística
+Tons que se afastam no matiz conforme divergem
+4. As criaturas
+As criaturas são o coração visual. O sistema de arte é modular e paramétrico (implementado em E10): genética e cultura viram pixels. Isso permite que cada partida tenha criaturas únicas e que elas evoluam de aparência.
+4.1. Anatomia base estilizada
+Defina uma &apos;forma-mãe&apos; simples e expressiva (ex.: um corpo arredondado com poucos apêndices) a partir da qual todas as variações são geradas. A silhueta deve ser reconhecível mesmo pequena na tela.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Concept da forma-mãe e 3–5 variações de silhueta.
+4.2. Parâmetros visuais controlados pela simulação (GDD §8.3)
+Parâmetro visual
+Controlado por
+Comunica ao jogador
+Cor base do corpo
+Genética + ambiente
+População, adaptação climática, espécie
+Textura (pelo/escama/pele)
+Genética
+Linhagem e clima de origem
+Forma e silhueta
+Genética
+Espécie e grau de divergência/especiação
+Tamanho
+Genética + nutrição
+Saúde, recursos, dimorfismo
+Ornamentos e pinturas
+Cultura
+Identidade tribal, papel social, rito
+Postura e cor de sinal
+Comunicação (estado)
+Emoção e intenção (não-verbal, GDD §3.5)
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Tabela visual: a mesma forma-mãe com cada parâmetro variando isoladamente.
+4.3. Evolução e especiação visíveis
+Mostre, num quadro, como uma linhagem se transforma ao longo de eras e como duas populações divergem até virarem espécies visivelmente distintas (ligado a M03). É um dos prazeres visuais centrais do jogo.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Árvore visual de uma linhagem evoluindo e se ramificando (especiação).
+4.4. Animação
+Animação procedural simples e econômica (squash &amp; stretch, balanço, respiração) para dar vida sem custo proibitivo. Estados a cobrir: ocioso, locomoção, forragear, fugir/alerta, cortejo, conflito, morte. A cor de sinal e a postura comunicam o estado emocional sem texto.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Folhas de animação (sprite sheets) dos estados principais ou referências de timing.
+5. O ambiente
+O ambiente é uma tela viva e mutável (GDD §8.4), refletindo natureza e a marca da civilização.
+Biomas com identidade de cor/textura própria, que mudam com clima e estação (E03/M06).
+Construções que refletem o estágio sociopolítico e o estilo artístico da cultura — duas civilizações constroem de formas visivelmente distintas.
+Território marcado visualmente: fronteiras, totens, campos cultivados, estradas.
+Cicatrizes ambientais: desmatamento, poluição, campos de batalha permanecem visíveis e contam a história.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Concepts de cada bioma e de uma mesma região em estações/épocas diferentes.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Progressão de construções por estágio (bando → tribo → cidade → estado).
+6. Linguagem visual da informação (UI/overlays)
+Como o jogo expõe centenas de estatísticas (M13), a UI precisa traduzir dados em sensação. Princípio de leitura dupla (GDD §9.5): o mundo vivo e os overlays dão leitura intuitiva e imediata; gráficos, fichas e códice dão leitura precisa sob demanda.
+6.1. Overlays
+Sobreposições alternáveis que repintam o mundo por estatística (mapa de calor de agressividade, recursos, fé, densidade populacional, divergência linguística), usando as paletas semânticas da §3.2.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Mockup do mundo com 2–3 overlays diferentes ativos.
+6.2. Painéis (GDD §9.3)
+Defina o visual de: mundo vivo, painel da civilização, ficha de indivíduo/Figura, códice cultural/religioso, mapa+overlays, e linha do tempo/Crônica. Mantenha consistência de ícones e cores para emoções coletivas e eventos.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Wireframes/mockups de cada painel principal.
+6.3. A escrita emergente como elemento gráfico
+A escrita procedural de cada civilização (M08) aparece em construções, artefatos e na Crônica — ilegível ao jogador no início e gradualmente &apos;traduzível&apos;. Trate-a como um elemento de arte: cada idioma tem um sistema de símbolos com identidade visual própria.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Estudos de sistemas de escrita/glifos procedurais por civilização.
+7. O &apos;lapso de evolução&apos; e a Crônica (artefatos visuais)
+O GIF/lapso de evolução (M13/E09) e a Crônica são também peças de identidade visual e de compartilhamento. Defina o enquadramento, a tipografia e a moldura desses artefatos para que sejam reconhecíveis como &apos;de Gênese&apos; quando compartilhados.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Mock do GIF de evolução e do layout da Crônica (com moldura/identidade).
+8. Áudio como camada sensorial (resumo visual-sonoro)
+Embora detalhado no GDD §8.6, o áudio integra a identidade: trilha generativa em camadas que cresce com a complexidade cultural, e vocalizações procedurais que evoluem com a linguagem. Visual e som devem &apos;subir de complexidade&apos; juntos ao longo da partida.
+<w:bottom w:val="dashed" w:color="8C5BAA" w:sz="8" w:space="14"/></w:pBdr><w:shd w:fill="F1EBF6" w:val="clear"/><w:spacing w:after="200" w:before="200"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="8C5BAA"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">[ ESPAÇO PARA IMAGEM / REFERÊNCIA ]Referências sonoras/moodboard de áudio (links ou descrições).
+9. Diretrizes para os artistas
+Toda arte de criatura deve funcionar dentro do sistema paramétrico (E10): nada de sprites totalmente manuais que não se componham por genoma/cultura.
+Priorizar legibilidade na escala real de jogo (testar sempre no tamanho em que aparece).
+Respeitar as paletas semânticas: cor é dado, não só estética.
+Evitar a &apos;estética genérica&apos;: buscar identidade própria, coerente com a beleza melancólica do tom.
+Entregar assets versionados (Git LFS) e em formato compatível com o pipeline da Godot.
+10. Checklist visual (para fechar a direção de arte)
+☐  Moodboard geral aprovado e anexado.
+☐  Paleta-base final definida (claro/escuro) e anexada.
+☐  Paletas semânticas definidas para todas as estatísticas-chave.
+☐  Forma-mãe das criaturas e variações de silhueta aprovadas.
+☐  Cada parâmetro visual (cor/textura/forma/tamanho/ornamento/postura) ilustrado.
+☐  Árvore visual de evolução/especiação produzida.
+☐  Estados de animação definidos (ocioso, locomoção, forragear, alerta, cortejo, conflito, morte).
+☐  Concepts de todos os biomas e de variação sazonal anexados.
+☐  Progressão visual de construções por estágio anexada.
+☐  Mockups de overlays e de todos os painéis (GDD §9.3) anexados.
+☐  Sistemas de escrita procedural estudados visualmente.
+☐  Identidade visual do GIF de evolução e da Crônica definida.
+☐  Referências de áudio reunidas.

@@ -1,0 +1,16 @@
+<svg viewBox="0 0 120 152" width="120" height="152" xmlns="http://www.w3.org/2000/svg" style="transform:scale(1);transform-origin:bottom center">
+      <defs><clipPath id="cr5"><ellipse cx="60" cy="93" rx="44" ry="31"></ellipse></clipPath></defs>
+      
+      <ellipse cx="60" cy="128" rx="35.2" ry="6" fill="#1F2933" opacity=".14"></ellipse>
+      
+      <g transform="rotate(0 60 93) translate(0 0) scale(1 1)" transform-origin="60px 93px">
+        <path d="M53 66 q-3 -10 -6 -14" stroke="#3f7074" stroke-width="2.4" fill="none" stroke-linecap="round"></path><circle cx="47" cy="51" r="3.4" fill="#8C5BAA"></circle>
+             <path d="M67 66 q3 -10 6 -14" stroke="#3f7074" stroke-width="2.4" fill="none" stroke-linecap="round"></path><circle cx="73" cy="51" r="3.4" fill="#8C5BAA"></circle>
+        <ellipse cx="60" cy="93" rx="44" ry="31" fill="#5FA9B0" stroke="#305558" stroke-width="2"></ellipse>
+        <g clip-path="url(#cr5)"><ellipse cx="60" cy="101.68" rx="26.4" ry="15.5" fill="#9ccace"></ellipse>
+          <ellipse cx="44.6" cy="79.05" rx="13.2" ry="6.82" fill="#9ccace" opacity=".5"></ellipse>
+        </g>
+        <circle cx="45.92" cy="83.08" r="5.3" fill="#fbf9f3"></circle><circle cx="46.715" cy="83.716" r="2.65" fill="#23202b"></circle><circle cx="44.86" cy="81.755" r="0.954" fill="#fff"></circle><circle cx="74.08" cy="83.08" r="5.3" fill="#fbf9f3"></circle><circle cx="74.875" cy="83.716" r="2.65" fill="#23202b"></circle><circle cx="73.02" cy="81.755" r="0.954" fill="#fff"></circle>
+        <path d="M55 91.45 Q60 95.45 65 91.45" stroke="#305558" stroke-width="1.8" fill="none" stroke-linecap="round"></path>
+        
+      </g></svg>

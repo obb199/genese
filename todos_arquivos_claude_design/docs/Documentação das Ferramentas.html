@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gênese — Documentação das Ferramentas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Spline+Sans+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F1ECE2;
+  --paper-2: #E8E1D3;
+  --card: #FCFAF4;
+  --ink: #2B2926;
+  --ink-soft: #6B655B;
+  --line: #2B2926;
+  --line-soft: #B9B0A0;
+  --influencia: #8C5BAA;
+  --vida: #2F6F62;
+  --tensao: #C0563A;
+  --recurso: #B8862F;
+  --fe: #7C4DBE;
+  --info: #3E6B8C;
+  --hand: 'Architects Daughter', cursive;
+  --ui: 'Inter', system-ui, sans-serif;
+  --mono: 'Spline Sans Mono', monospace;
+  --radius: 10px 7px 11px 6px;
+  --shadow: 3px 4px 0 rgba(43,41,38,.14);
+  --rail-w: 272px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--ui);
+  color: var(--ink);
+  background: var(--paper);
+  background-image: radial-gradient(var(--line-soft) .6px, transparent .6px);
+  background-size: 22px 22px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Shell ---- */
+.app { display: flex; min-height: 100vh; }
+.rail {
+  width: var(--rail-w); flex: 0 0 var(--rail-w);
+  position: sticky; top: 0; align-self: flex-start;
+  height: 100vh; overflow-y: auto;
+  background: var(--paper-2);
+  border-right: 2px solid var(--line);
+  padding: 20px 16px 48px;
+  scrollbar-width: thin;
+}
+.rail h1 { font-family: var(--hand); font-size: 28px; line-height: 1; margin: 4px 6px 2px; }
+.rail .sub { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); margin: 0 6px 16px; text-transform: uppercase; letter-spacing: 1.5px; }
+.grp-label { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-soft); margin: 18px 6px 7px; display: block; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
+  background: transparent; border: 1.5px solid transparent; border-radius: 8px 6px 9px 5px;
+  padding: 7px 10px; margin-bottom: 3px; cursor: pointer;
+  font-family: var(--ui); font-size: 13px; font-weight: 500; color: var(--ink);
+}
+.nav-item:hover { background: #0000000a; }
+.nav-item.active { background: var(--card); border-color: var(--line); box-shadow: 2px 2px 0 rgba(43,41,38,.13); }
+.nav-item .dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.nav-item .num { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); margin-left: auto; }
+
+.stage { flex: 1 1 auto; min-width: 0; padding: 40px 44px 100px; max-width: 1200px; margin: 0 auto; }
+
+.topbar { display: none; }
+@media (max-width: 900px) {
+  .app { flex-direction: column; }
+  .rail { display: none; }
+  .topbar { display: flex; gap: 10px; align-items: center; position: sticky; top: 0; z-index: 30; background: var(--paper-2); border-bottom: 2px solid var(--line); padding: 10px 14px; }
+  .topbar .brand { font-family: var(--hand); font-size: 22px; }
+  .topbar select { flex: 1; font-size: 14px; padding: 8px 10px; border: 2px solid var(--line); border-radius: 8px; background: var(--card); }
+  .stage { padding: 22px 18px 80px; }
+}
+
+/* ---- Section ---- */
+.sec { animation: fade .2s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+.sec-head { margin-bottom: 28px; border-bottom: 2.5px dashed var(--line-soft); padding-bottom: 16px; }
+.sec-head .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--influencia); font-weight: 600; }
+.sec-head h2 { font-family: var(--hand); font-size: 44px; line-height: 1.02; margin: 4px 0 10px; }
+.sec-head p { margin: 0; max-width: 68ch; color: var(--ink-soft); font-size: 14.5px; line-height: 1.65; }
+.sec-head .refs { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); margin-top: 10px; }
+
+/* ---- Blocks ---- */
+.block { margin: 34px 0; }
+.block > h3 { font-family: var(--hand); font-size: 26px; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.block > .desc { margin: 0 0 16px; color: var(--ink-soft); font-size: 13.5px; max-width: 72ch; line-height: 1.6; }
+
+/* ---- Info cards ---- */
+.card-grid { display: grid; gap: 16px; }
+.c2 { grid-template-columns: repeat(2, 1fr); }
+.c3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 780px) { .c2, .c3 { grid-template-columns: 1fr; } }
+
+.card {
+  border: 2px solid var(--line); border-radius: var(--radius);
+  background: var(--card); box-shadow: var(--shadow); padding: 18px 20px; overflow: hidden;
+}
+.card-title { font-family: var(--hand); font-size: 20px; margin: 0 0 7px; line-height: 1.1; }
+.card-body { font-size: 13.5px; line-height: 1.65; color: var(--ink-soft); }
+.card-body strong { color: var(--ink); }
+.card-body p { margin: 0 0 10px; }
+.card-body p:last-child { margin-bottom: 0; }
+.card-tag { display: inline-block; font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; border: 1.5px solid; margin-bottom: 10px; }
+.tag-assets { background: #D4E5DF; border-color: var(--vida); color: #1c4d42; }
+.tag-wf { background: #E7DBF0; border-color: var(--influencia); color: #4a2075; }
+.tag-ref { background: #D6E2EC; border-color: var(--info); color: #234a63; }
+
+/* ---- Step list ---- */
+.steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+.steps li { display: flex; gap: 14px; align-items: flex-start; font-size: 13.5px; line-height: 1.6; }
+.step-num {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line);
+  background: var(--card); font-family: var(--mono); font-size: 11px; font-weight: 600;
+  display: grid; place-items: center; color: var(--influencia); box-shadow: 2px 2px 0 rgba(43,41,38,.12);
+}
+.step-body { padding-top: 3px; }
+.step-body strong { color: var(--ink); }
+.step-body .sub-note { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+
+/* ---- Feature list (tabela) ---- */
+.feat-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.feat-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; text-align: left; padding: 6px 12px; border-bottom: 2px solid var(--line); }
+.feat-table td { padding: 11px 12px; border-bottom: 1.5px solid var(--line-soft); vertical-align: top; line-height: 1.5; }
+.feat-table tr:last-child td { border-bottom: none; }
+.feat-table tr:hover td { background: #0000000a; }
+.feat-table td:first-child { font-weight: 600; white-space: nowrap; }
+.feat-table .mono { font-family: var(--mono); font-size: 11.5px; color: var(--info); }
+
+/* ---- Annotation ---- */
+.annot {
+  font-family: var(--hand); font-size: 15.5px; color: var(--ink); line-height: 1.4;
+  background: #FFF8D9; border: 1.5px solid #D8C98A; border-radius: 9px 6px 10px 5px;
+  padding: 12px 15px; box-shadow: 2px 3px 0 rgba(43,41,38,.1); margin: 14px 0;
+}
+.annot::before { content: "✎ "; opacity: .6; }
+.annot.tip { background: #E7DBF0; border-color: #bfa3d6; }
+.annot.tip::before { content: "☞ "; }
+.annot.warn { background: #F0D8CF; border-color: #d4936b; }
+.annot.warn::before { content: "⚠ "; }
+
+/* ---- Color swatch row ---- */
+.palette { display: flex; gap: 0; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+.swatch { flex: 1; display: flex; flex-direction: column; }
+.swatch-color { height: 54px; }
+.swatch-label { padding: 7px 9px; background: var(--card); font-family: var(--mono); font-size: 10px; line-height: 1.35; border-top: 1.5px solid var(--line); }
+.swatch-label .nm { font-weight: 600; color: var(--ink); }
+.swatch-label .hex { color: var(--ink-soft); }
+
+/* ---- Section list (feature bullets) ---- */
+.sec-list { list-style: none; padding: 0; margin: 14px 0; display: flex; flex-direction: column; gap: 10px; }
+.sec-list li { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; line-height: 1.6; }
+.sec-list li::before { content: "✦"; font-size: 11px; color: var(--influencia); flex: 0 0 auto; margin-top: 2px; }
+.sec-list .label { font-weight: 600; min-width: 180px; }
+
+/* ---- Nav index cards (para visão geral) ---- */
+.index-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+@media (max-width: 860px) { .index-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .index-grid { grid-template-columns: 1fr; } }
+.index-card {
+  border: 2px solid var(--line); border-radius: var(--radius); background: var(--card);
+  box-shadow: var(--shadow); padding: 14px 16px; cursor: default;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.index-card .ic-eyebrow { font-family: var(--mono); font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
+.index-card .ic-title { font-family: var(--hand); font-size: 18px; line-height: 1.1; }
+.index-card .ic-desc { font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin-top: 3px; }
+.index-card .ic-dot { width: 10px; height: 10px; border-radius: 50%; margin-bottom: 4px; }
+
+/* ---- Controle diagram ---- */
+.control-row { display: flex; align-items: stretch; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+.control-box {
+  flex: 1 1 180px; border: 2px solid var(--line); border-radius: var(--radius);
+  background: var(--card); box-shadow: var(--shadow); padding: 14px 16px;
+}
+.control-box .cb-label { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
+.control-box .cb-name { font-family: var(--hand); font-size: 20px; line-height: 1.1; margin-bottom: 6px; }
+.control-box .cb-desc { font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
+
+/* ---- Code snippet ---- */
+.code-block { background: #231C30; border: 2px solid var(--line); border-radius: 10px; padding: 18px 22px; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: #EFE9F4; overflow-x: auto; margin: 14px 0; }
+.code-block .k { color: #C9A86A; }
+.code-block .s { color: #7FB29E; }
+.code-block .c { color: #8C5BAA; }
+
+/* ---- Tweaks preview ---- */
+.tw-preview { border: 2px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); max-width: 280px; overflow: hidden; }
+.tw-preview .tw-head { display: flex; align-items: center; justify-content: space-between; padding: 9px 13px; border-bottom: 2px solid var(--line); background: var(--paper-2); font-family: var(--hand); font-size: 20px; }
+.tw-preview .tw-body { padding: 12px 13px; }
+.tw-preview .tw-sec { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); margin: 12px 0 6px; }
+.tw-preview .tw-seg { display: flex; gap: 5px; }
+.tw-preview .tw-seg span { flex: 1; text-align: center; font-size: 11.5px; padding: 6px 4px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--card); font-family: var(--ui); }
+.tw-preview .tw-seg span.on { background: var(--influencia); color: #fff; border-color: var(--influencia); }
+
+/* ---- Glossary ---- */
+.gloss-row { display: grid; grid-template-columns: 64px 1fr; gap: 10px 20px; align-items: baseline; margin: 10px 0; font-size: 13.5px; line-height: 1.6; }
+.gloss-key { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--info); padding: 2px 8px; background: #D6E2EC; border: 1.5px solid var(--info); border-radius: 5px; text-align: center; }
+.gloss-val strong { color: var(--ink); }
+.gloss-val { color: var(--ink-soft); }
+
+/* ---- Footer ---- */
+.foot { margin-top: 56px; border-top: 2px dashed var(--line-soft); padding-top: 14px; font-family: var(--mono); font-size: 11px; color: var(--ink-soft); line-height: 1.7; }
+
+/* ---- Divider ---- */
+.divider { border: none; border-top: 2px dashed var(--line-soft); margin: 36px 0; }
+
+/* ---- Keyboard shortcut ---- */
+.kbd { font-family: var(--mono); font-size: 11px; border: 1.5px solid var(--line); border-radius: 5px; padding: 1px 6px; background: var(--card); box-shadow: 0 2px 0 rgba(43,41,38,.15); }
+
+/* ---- Inline tag ---- */
+.tag { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; border: 1.5px solid; display: inline-block; line-height: 1.4; }
+.tag-p0 { background: #F0D8CF; border-color: var(--tensao); color: #7e2f1c; }
+.tag-p1 { background: #F0E4C8; border-color: var(--recurso); color: #6e4f12; }
+.tag-p2 { background: #E4D8F2; border-color: var(--fe); color: #3d1f6b; }
+
+/* ---- Highlight bar ---- */
+.highlight { border-left: 4px solid var(--influencia); padding: 12px 16px; background: #E7DBF020; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 13.5px; line-height: 1.65; }
+.highlight strong { color: var(--ink); }
+
+/* ---- Creature param grid ---- */
+.param-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin: 14px 0; }
+.param-item { border: 1.5px solid var(--line-soft); border-radius: 8px; background: var(--card); padding: 10px 12px; font-size: 12.5px; }
+.param-item .pname { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 3px; }
+.param-item .popts { font-size: 12px; color: var(--ink); line-height: 1.4; }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">Gênese</span>
+  <select id="mobileSel" aria-label="Selecionar seção"></select>
+</div>
+
+<div class="app">
+  <nav class="rail" id="rail"></nav>
+  <main class="stage" id="stage"></main>
+</div>
+
+<script>
+const SECTIONS = [
+  /* Visão Geral */
+  { id:'intro',       group:'Início',             title:'Sobre este documento',    dot:'#8C5BAA' },
+  { id:'relacao',     group:'Início',             title:'Como as ferramentas se relacionam', dot:'#2F6F62' },
+  /* Biblioteca */
+  { id:'lib-nav',     group:'Biblioteca de Assets', title:'Navegação',             dot:'#3E6B8C' },
+  { id:'lib-cores',   group:'Biblioteca de Assets', title:'Cores & Tokens',        dot:'#C0563A' },
+  { id:'lib-icones',  group:'Biblioteca de Assets', title:'Ícones',                dot:'#3E6B8C' },
+  { id:'lib-criatura',group:'Biblioteca de Assets', title:'Criatura paramétrica',  dot:'#2F6F62' },
+  { id:'lib-escrita', group:'Biblioteca de Assets', title:'Escrita procedural',    dot:'#7C4DBE' },
+  { id:'lib-efeitos', group:'Biblioteca de Assets', title:'Efeitos & partículas',  dot:'#5FE0C2' },
+  { id:'lib-flora',   group:'Biblioteca de Assets', title:'Biomas — Flora & Props',dot:'#56A06A' },
+  { id:'lib-bld',     group:'Biblioteca de Assets', title:'Construções modulares', dot:'#C9A86A' },
+  { id:'lib-marca',   group:'Biblioteca de Assets', title:'Marca & Molduras',      dot:'#8C5BAA' },
+  { id:'lib-destino', group:'Biblioteca de Assets', title:'Cartões de Destino',    dot:'#B8862F' },
+  { id:'lib-unity',   group:'Biblioteca de Assets', title:'Exportar / Unity',      dot:'#3E6B8C' },
+  /* Wireframes */
+  { id:'wf-nav',      group:'Wireframes',         title:'Navegação & Tweaks',      dot:'#8C5BAA' },
+  { id:'wf-hud',      group:'Wireframes',         title:'Mundo Vivo (HUD)',        dot:'#8C5BAA' },
+  { id:'wf-influencia',group:'Wireframes',        title:'Tela de Influência',      dot:'#8C5BAA' },
+  { id:'wf-civ',      group:'Wireframes',         title:'Painel da Civilização',   dot:'#3E6B8C' },
+  { id:'wf-ficha',    group:'Wireframes',         title:'Ficha de Figura',         dot:'#3E6B8C' },
+  { id:'wf-codice',   group:'Wireframes',         title:'Códice Cultural',         dot:'#7C4DBE' },
+  { id:'wf-mapa',     group:'Wireframes',         title:'Mapa + Overlays',         dot:'#3E6B8C' },
+  { id:'wf-cronica',  group:'Wireframes',         title:'Crônica',                 dot:'#7C4DBE' },
+  { id:'wf-assets',   group:'Wireframes',         title:'Folhas de Assets de Arte',dot:'#2F6F62' },
+  { id:'wf-meta',     group:'Wireframes',         title:'Meta, Loja & Onboarding', dot:'#B8862F' },
+  /* Referência */
+  { id:'glossario',   group:'Referência',         title:'Glossário de siglas',     dot:'#8A8377' },
+];
+
+const byId = Object.fromEntries(SECTIONS.map(s => [s.id, s]));
+
+// -------------------------------------------------------
+// CONTENT BUILDERS
+// -------------------------------------------------------
+
+function buildIntro() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">DOCUMENTAÇÃO · v1.0 · Junho 2026</div>
+    <h2>Sobre este documento</h2>
+    <p>Guia de uso das duas ferramentas interativas de design do projeto Gênese. Explica o que cada ferramenta faz, como navegar, como usar cada seção e como integrar o resultado no pipeline do projeto.</p>
+  </div>
+
+  <div class="block">
+    <h3>Duas ferramentas, um projeto</h3>
+    <p class="desc">O design de Gênese é suportado por duas ferramentas complementares, abertas no navegador — sem instalação, sem dependências externas.</p>
+    <div class="card-grid c2">
+      <div class="card">
+        <span class="card-tag tag-assets">Biblioteca de Assets</span>
+        <div class="card-title">Gênese — Biblioteca de Assets</div>
+        <div class="card-body">
+          <p>A <strong>fonte de verdade visual do projeto</strong>. Contém todos os assets vetoriais produzidos — ícones, criatura paramétrica, glifos, marca, molduras, flora, construções — além dos tokens de cor e guias de exportação para Unity/C#.</p>
+          <p>Use-a para <strong>consultar, explorar e exportar</strong> assets finais (ou próximos do final).</p>
+        </div>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-wf">Wireframes</span>
+        <div class="card-title">Gênese — Wireframes</div>
+        <div class="card-body">
+          <p>O <strong>mapa de telas e produção de arte</strong> do jogo. Cada folha descreve uma tela de UI ou uma família de assets, com placeholders tracejados, anotações, checklists de entregas e paletas semânticas.</p>
+          <p>Use-a para <strong>planejar, revisar e rastrear</strong> o que ainda precisa ser produzido.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Como acessar</h3>
+    <ul class="steps">
+      <li><span class="step-num">1</span><div class="step-body"><strong>Abra o arquivo HTML no navegador</strong> — qualquer navegador moderno (Chrome, Firefox, Safari, Edge). Não é necessário servidor; basta abrir o arquivo local ou usar o preview do editor.<div class="sub-note">genese-assets/Gênese - Biblioteca de Assets.html · genese-wireframes/Gênese - Wireframes.html</div></div></li>
+      <li><span class="step-num">2</span><div class="step-body"><strong>Navegue pela barra lateral</strong> à esquerda para trocar de seção. Em telas pequenas (&lt; 880 px), a barra lateral some e aparece um menu dropdown no topo.</div></li>
+      <li><span class="step-num">3</span><div class="step-body"><strong>A URL atualiza o hash</strong> (#cores, #criaturas, etc.) — você pode marcar uma seção nos favoritos ou copiar o link direto para uma equipe.</div></li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h3>Visão geral das seções disponíveis</h3>
+    <div class="index-grid">
+      ${[
+        { dot:'#C0563A', label:'Biblioteca', name:'Cores & Tokens', desc:'Paleta-base + 6 rampas semânticas + arquivo tokens.json' },
+        { dot:'#3E6B8C', label:'Biblioteca', name:'Ícones', desc:'Conjunto SVG monocromático, tingível em runtime' },
+        { dot:'#2F6F62', label:'Biblioteca', name:'Criatura paramétrica', desc:'Builder interativo com genoma completo (25+ parâmetros)' },
+        { dot:'#7C4DBE', label:'Biblioteca', name:'Escrita procedural', desc:'6 culturas de glifos gerados algoritmicamente' },
+        { dot:'#5FE0C2', label:'Biblioteca', name:'Efeitos & partículas', desc:'Fogueira, nudge, pulso, raio e 3 módulos de clima' },
+        { dot:'#56A06A', label:'Biblioteca', name:'Flora & Props', desc:'Sprites vetoriais por bioma (17 tipos de bioma)' },
+        { dot:'#C9A86A', label:'Biblioteca', name:'Construções modulares', desc:'11 estágios × 10 culturas + variante Ruínas' },
+        { dot:'#8C5BAA', label:'Biblioteca', name:'Marca & Molduras', desc:'Logotipo, ícone do app e molduras 9-slice para HUD' },
+        { dot:'#B8862F', label:'Biblioteca', name:'Cartões de Destino', desc:'7 variantes de tela-resumo compartilhável' },
+        { dot:'#8C5BAA', label:'Wireframes', name:'7 telas de UI', desc:'HUD, Influência, Civilização, Ficha, Códice, Mapa, Crônica' },
+        { dot:'#2F6F62', label:'Wireframes', name:'4 folhas de assets', desc:'Criaturas, Ambiente, Construções, Ícones & Overlays' },
+        { dot:'#B8862F', label:'Wireframes', name:'3 folhas meta', desc:'Escrita procedural, Artefatos, Marca/Loja/Onboarding' },
+      ].map(c => `<div class="index-card">
+        <div class="ic-dot" style="background:${c.dot}"></div>
+        <div class="ic-eyebrow">${c.label}</div>
+        <div class="ic-title">${c.name}</div>
+        <div class="ic-desc">${c.desc}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function buildRelacao() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">VISÃO GERAL</div>
+    <h2>Como as ferramentas se relacionam</h2>
+    <p>As duas ferramentas têm propósitos distintos mas complementares — a Biblioteca entrega assets finais, os Wireframes entregam o mapa de produção e as especificações de UX.</p>
+  </div>
+
+  <div class="block">
+    <h3>Fluxo de referência</h3>
+    <div class="highlight">
+      <strong>Regra geral:</strong> os Wireframes definem <em>o que</em> precisa ser produzido e <em>como</em> deve funcionar. A Biblioteca entrega <em>o ativo pronto</em>. Ambas apontam para os mesmos documentos-fonte (GDD, AA, DV).
+    </div>
+    <ul class="steps">
+      <li><span class="step-num">①</span><div class="step-body"><strong>GDD + AA + DV</strong> são os documentos de design de origem — tudo nas ferramentas deriva deles.<div class="sub-note">Ver glossário de siglas ao final deste documento.</div></div></li>
+      <li><span class="step-num">②</span><div class="step-body"><strong>Wireframes</strong> traduzem esses documentos em mockups de tela e folhas de produção de arte, com checklists de entrega e prioridades (P0 / P1 / P2).</div></li>
+      <li><span class="step-num">③</span><div class="step-body"><strong>Biblioteca de Assets</strong> entrega os vetores prontos conforme as famílias são concluídas. Quando um asset do checklist dos Wireframes estiver na Biblioteca, está pronto para exportação.</div></li>
+      <li><span class="step-num">④</span><div class="step-body"><strong>Unity / C#</strong> consome os SVGs exportados da Biblioteca e os tokens de cor do arquivo <span class="code-block" style="display:inline;padding:2px 7px;font-size:11px">tokens.json</span>.</div></li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h3>Onde cada informação mora</h3>
+    <table class="feat-table">
+      <thead><tr><th>Necessidade</th><th>Ferramenta</th><th>Seção</th></tr></thead>
+      <tbody>
+        <tr><td>Paleta de cores exata</td><td>Biblioteca</td><td>Cores & Tokens</td></tr>
+        <tr><td>Tokens para Unity (.json)</td><td>Biblioteca</td><td>Cores & Tokens → exportar tokens.json</td></tr>
+        <tr><td>SVGs de ícones prontos</td><td>Biblioteca</td><td>Ícones → Exportar / Unity</td></tr>
+        <tr><td>Quais ícones existem e o que significam</td><td>Wireframes</td><td>Ícones & Overlays</td></tr>
+        <tr><td>Explorar variações da criatura</td><td>Biblioteca</td><td>Criatura paramétrica (builder interativo)</td></tr>
+        <tr><td>Checklist de animações da criatura</td><td>Wireframes</td><td>Criaturas → 2.2 Estados de animação</td></tr>
+        <tr><td>Paleta de um bioma específico</td><td>Biblioteca</td><td>Biomas — Flora & Props</td></tr>
+        <tr><td>Quais biomas precisam de tileset</td><td>Wireframes</td><td>Ambiente & Biomas</td></tr>
+        <tr><td>Mockup de uma tela de UI</td><td>Wireframes</td><td>Grupo "Telas (UI)"</td></tr>
+        <tr><td>Molduras prontas para o HUD</td><td>Biblioteca</td><td>Marca & Molduras → Molduras de HUD</td></tr>
+        <tr><td>Layout dos Cartões de Destino</td><td>Ambas</td><td>Biblioteca: Cartões de Destino · Wireframes: Artefatos Compartilháveis</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="annot tip">Os Tweaks dos Wireframes (posição da barra, densidade, tom do papel) são preferências de visualização — não afetam os assets. Persiste entre sessões via localStorage.</div>`;
+}
+
+/* ====================== BIBLIOTECA ====================== */
+
+function buildLibNav() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA DE ASSETS · Navegação</div>
+    <h2>Navegação</h2>
+    <p>A Biblioteca é uma single-page application com barra lateral fixa à esquerda e conteúdo à direita. A seção ativa muda o hash da URL, permitindo links diretos.</p>
+  </div>
+
+  <div class="block">
+    <h3>Estrutura da barra lateral</h3>
+    <p class="desc">A navegação está dividida em grupos temáticos. Cada item tem um ponto colorido que identifica a família de asset.</p>
+    <table class="feat-table">
+      <thead><tr><th>Grupo</th><th>Seções</th></tr></thead>
+      <tbody>
+        <tr><td>Início</td><td>Visão geral — panorama do que a biblioteca entrega</td></tr>
+        <tr><td>Fundamentos</td><td>Cores & Tokens · Ícones</td></tr>
+        <tr><td>Núcleo visual</td><td>Criatura paramétrica · Escrita procedural · Efeitos & partículas</td></tr>
+        <tr><td>Mundo (vetor)</td><td>Biomas — Flora & Props · Construções modulares</td></tr>
+        <tr><td>Identidade</td><td>Marca & Molduras · Cartões de Destino</td></tr>
+        <tr><td>Direção (pintado)</td><td>Biomas & Construções — mapa de direção para o ilustrador</td></tr>
+        <tr><td>Integração</td><td>Exportar / Unity — notas de pipeline e código C#</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>Responsividade</h3>
+    <p class="desc">Em telas abaixo de 880 px de largura, a barra lateral é substituída por um menu dropdown fixo no topo. O conteúdo é idêntico.</p>
+  </div>
+
+  <div class="annot">A seção <strong>Visão geral</strong> (primeira da lista) é o melhor ponto de partida para quem acessa a Biblioteca pela primeira vez — ela resume o que existe e o que ainda está na direção de arte.</div>`;
+}
+
+function buildLibCores() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Cores & Tokens</div>
+    <h2>Cores & Tokens</h2>
+    <p>A seção de cores é o ponto de entrada para qualquer produção de arte do projeto. Define dois níveis: a paleta-base de identidade e as rampas semânticas que carregam significado de dado.</p>
+    <div class="refs">Arquivo exportável: <strong>tokens.json</strong></div>
+  </div>
+
+  <div class="block">
+    <h3>Paleta-base (5 cores de identidade)</h3>
+    <p class="desc">Cada cor tem um nome semântico que expressa seu papel no mundo do jogo — não é só estética, é vocabulário.</p>
+    <div class="palette">
+      ${[
+        { hex:'#1F2933', nm:'Fundo / vazio', use:'Calma, espaço' },
+        { hex:'#2F6F62', nm:'Vida', use:'Vegetação, biológico' },
+        { hex:'#8C5BAA', nm:'Influência', use:'Presença do jogador' },
+        { hex:'#C0563A', nm:'Tensão', use:'Conflito, perigo' },
+        { hex:'#EAF2EF', nm:'UI claro', use:'Painéis e texto' },
+      ].map(s => `<div class="swatch"><div class="swatch-color" style="background:${s.hex}"></div><div class="swatch-label"><div class="nm">${s.nm}</div><div class="hex">${s.hex}</div><div class="hex">${s.use}</div></div></div>`).join('')}
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Rampas semânticas (6 escalas de dado)</h3>
+    <p class="desc">Escalas cromáticas de baixo para alto, usadas para colorir sobreposições, barras de estatísticas e heatmaps. <strong>Nunca misture rampas diferentes para a mesma estatística</strong> — a cor precisa ser consistente para que o jogador "aprenda a ler" o mundo.</p>
+    <table class="feat-table">
+      <thead><tr><th>Rampa</th><th>Âncoras (baixo → alto)</th><th>Uso</th></tr></thead>
+      <tbody>
+        <tr><td>Agressividade</td><td class="mono">#7E8CA0 → #8E2D17</td><td>Criaturas, overlays, ícones de conflito</td></tr>
+        <tr><td>Vitalidade / Saúde</td><td class="mono">#C7CDC8 → #16463C</td><td>Barra de saúde, bioma de pradaria</td></tr>
+        <tr><td>Recursos</td><td class="mono">#8A7C5E → #F2E2A6</td><td>Comida, material, riqueza</td></tr>
+        <tr><td>Fé / Religiosidade</td><td class="mono">#9A93A8 → #5E2E9E</td><td>Estruturas religiosas, ornamentos</td></tr>
+        <tr><td>Densidade populacional</td><td class="mono">#CFE0D8 → #16463C</td><td>Overlay de população no mapa</td></tr>
+        <tr><td>Divergência linguística</td><td class="mono">#3E6B8C → #C0563A</td><td>Overlay de idioma no mapa</td></tr>
+      </tbody>
+    </table>
+    <div class="annot">As rampas são as mesmas que aparecem nos overlays do Mapa nos Wireframes. Ao colorir um ícone ou barra, sempre consulte a rampa correspondente para manter consistência.</div>
+  </div>
+
+  <div class="block">
+    <h3>Exportar para Unity: tokens.json</h3>
+    <p class="desc">O arquivo <strong>tokens.json</strong> (pasta <span class="mono" style="font-family:var(--mono);font-size:11.5px;color:var(--info)">genese-assets/</span>) contém todas as cores no formato RGB pronto para importação. Ele pode ser lido como uma paleta de constantes em C#.</p>
+    <div class="code-block"><span class="k">using</span> UnityEngine;
+
+<span class="k">public static class</span> GenesePalette {
+  <span class="k">public static readonly</span> Color Influencia = <span class="k">new</span> Color32(<span class="c">0x8C</span>,<span class="c">0x5B</span>,<span class="c">0xAA</span>,<span class="c">0xFF</span>);
+  <span class="k">public static readonly</span> Color Vida       = <span class="k">new</span> Color32(<span class="c">0x2F</span>,<span class="c">0x6F</span>,<span class="c">0x62</span>,<span class="c">0xFF</span>);
+  <span class="k">public static readonly</span> Color Tensao     = <span class="k">new</span> Color32(<span class="c">0xC0</span>,<span class="c">0x56</span>,<span class="c">0x3A</span>,<span class="c">0xFF</span>);
+}</div>
+  </div>`;
+}
+
+function buildLibIcones() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Ícones</div>
+    <h2>Ícones</h2>
+    <p>Conjunto de ícones monocromáticos (stroke = currentColor), desenhados num viewBox de 24×24 px com traço arredondado. São tingíveis em runtime — uma única cópia do arquivo, várias cores.</p>
+    <div class="refs">Arquivo-fonte: <strong>icons.js</strong> · Exportados: <strong>svg/icons/*.svg</strong></div>
+  </div>
+
+  <div class="block">
+    <h3>Famílias de ícones disponíveis</h3>
+    <table class="feat-table">
+      <thead><tr><th>Família</th><th>O que inclui</th><th>Uso no jogo</th></tr></thead>
+      <tbody>
+        <tr><td>Recursos</td><td>Comida, água, material, luxo</td><td>HUD e painéis de recurso</td></tr>
+        <tr><td>Nudges (intervenção)</td><td>Sinal, proteção, faísca, semente, inspiração</td><td>Tela de Influência</td></tr>
+        <tr><td>Barra de ferramentas</td><td>Observar, ambiente, gráficos, povo, códice, contextual</td><td>Barra de ferramentas do HUD</td></tr>
+        <tr><td>Macro-estatísticas</td><td>Agressividade, expansionismo, coesão, inovação…</td><td>Painel da Civilização</td></tr>
+        <tr><td>Eventos & emoções</td><td>Alerta, marco, conflito, crise, moral, presságio, colapso</td><td>Linha do tempo / notificações</td></tr>
+        <tr><td>Cursores</td><td>Cursor de observação, ação, Figura</td><td>Interação no mundo vivo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>Como usar na Biblioteca</h3>
+    <ul class="steps">
+      <li><span class="step-num">1</span><div class="step-body"><strong>Navegue até "Ícones"</strong> na barra lateral. Cada família aparece como um bloco com os ícones em grade.</div></li>
+      <li><span class="step-num">2</span><div class="step-body"><strong>Passe o mouse</strong> sobre um ícone para ver o nome do arquivo <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">.svg</span> correspondente.</div></li>
+      <li><span class="step-num">3</span><div class="step-body"><strong>Para exportar</strong>, vá até a seção "Exportar / Unity" e use os botões de download — os arquivos são gerados e baixados como <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">svg/icons/</span>.</div></li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h3>Como integrar no Unity</h3>
+    <ul class="steps">
+      <li><span class="step-num">1</span><div class="step-body">Importe o pacote <strong>com.unity.vectorgraphics</strong> no Package Manager.</div></li>
+      <li><span class="step-num">2</span><div class="step-body">Arraste os <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">.svg</span> para a pasta <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">Assets/Icons/</span>.</div></li>
+      <li><span class="step-num">3</span><div class="step-body">Tinte em runtime via <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">SpriteRenderer.color</span> — os SVGs usam <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">currentColor</span>, então uma única cópia do asset funciona em qualquer cor.</div></li>
+    </ul>
+  </div>
+  <div class="annot warn">Nunca duplicate um SVG de ícone para obter uma cor diferente — use a propriedade de cor do SpriteRenderer. Isso mantém o pacote de assets enxuto e facilita mudanças de paleta globais.</div>`;
+}
+
+function buildLibCriatura() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Criatura paramétrica</div>
+    <h2>Criatura paramétrica</h2>
+    <p>O sistema de criatura é o mais complexo da Biblioteca — e o mais central para o jogo. Um builder interativo permite explorar o genoma visual completo em tempo real, sem código.</p>
+    <div class="refs">Arquivo-fonte: <strong>creature.js</strong> — função <strong>CR.build(opts) → SVG</strong></div>
+  </div>
+
+  <div class="block">
+    <h3>Como usar o builder interativo</h3>
+    <ul class="steps">
+      <li><span class="step-num">1</span><div class="step-body"><strong>Navegue até "Criatura paramétrica"</strong>. O preview da criatura fica à esquerda; os controles, à direita em coluna.</div></li>
+      <li><span class="step-num">2</span><div class="step-body"><strong>Clique em qualquer opção</strong> de um controle segmentado para alterar aquele traço instantaneamente. A criatura redesenha em tempo real.</div></li>
+      <li><span class="step-num">3</span><div class="step-body"><strong>Use "Aleatório"</strong> para gerar combinações inesperadas. O número de genoma (#seed) é exibido — anote-o se quiser reproduzir aquela criatura depois.</div></li>
+      <li><span class="step-num">4</span><div class="step-body"><strong>Use "Reset"</strong> para voltar ao estado padrão (a forma-mãe base).</div></li>
+      <li><span class="step-num">5</span><div class="step-body">Role para baixo para ver os <strong>Estados de animação</strong> (a mesma criatura em 4 poses) e as <strong>Variações de silhueta</strong> (5 ramos de especiação).</div></li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h3>Parâmetros do genoma (25+ controles)</h3>
+    <div class="param-grid">
+      ${[
+        { n:'Forma', o:'Ovo · Redonda · Alta · Baixa · Pera · Feijão · Gota' },
+        { n:'Textura', o:'Nenhuma · Ventre · Pintas · Listras · Escamas · Penas · Musgo…' },
+        { n:'Olhos', o:'2 normais · Grandes · Ciclope · 3 olhos · Sem olhos · Compostos…' },
+        { n:'Pupila', o:'Redonda · Vertical · Horizontal · Estrela · Nenhuma' },
+        { n:'Boca', o:'Simples · Bico · Presas · Tromba · Ventosa · Lábios · Nenhuma' },
+        { n:'Focinho', o:'Nenhum · Alongado · Achatado · Chifre' },
+        { n:'Bochechas', o:'Nenhuma · Papo · Barbilhões · Papada' },
+        { n:'Orelhas', o:'Nenhuma · Pontudas · Arred. · Caídas · Penacho · Leque…' },
+        { n:'Pescoço', o:'Nenhum · Curto · Longo' },
+        { n:'Cauda', o:'Nenhuma · Curta · Longa · Espiral · Tufo · Ferrão · Bífida…' },
+        { n:'Pernas', o:'Nenhuma · Curtas · Altas · Para trás · Palmadas' },
+        { n:'Braços', o:'Nenhum · Garras · Nadadeiras · Tentáculos · Asas · 2º par…' },
+        { n:'Antenas / Crista', o:'Nenhuma · Par · Única · Chifres · Crista óssea · Crina…' },
+        { n:'Acabamento', o:'Fosco · Acetinado · Metálico · Iridescente · Perolado · Espelhado' },
+        { n:'Transparência', o:'Sólido · Translúcido · Cristalino · Fantasmal' },
+        { n:'Emissão de luz', o:'Nenhuma · Veias · Corpo · Olhos · Rastro' },
+        { n:'Assimetria', o:'Nenhuma · Olho · Cicatriz · Queimadura' },
+        { n:'Temperamento', o:'Neutro · Curioso · Tímido · Agressivo · Preguiçoso…' },
+        { n:'Ornamento (cultura)', o:'Nenhum · Faixa · Pintura facial · Escarificação · Piercing…' },
+        { n:'Cor base', o:'10 cores selecionáveis (paleta da rampas)' },
+        { n:'Cor secundária', o:'10 cores, misturada com a base' },
+        { n:'Mistura de cor', o:'Nenhuma · Degradê · Bicolor · Ventre 2ª · Dorsal · Manchas' },
+        { n:'Cor de sinal', o:'5 cores (paleta de tensão, vida, fé, info, recurso)' },
+        { n:'Aura de sinal', o:'Ligado / desligado — halo ao redor do corpo' },
+        { n:'Tamanho', o:'Pequeno (0.82×) · Médio (1×) · Grande (1.18×)' },
+      ].map(p => `<div class="param-item"><div class="pname">${p.n}</div><div class="popts">${p.o}</div></div>`).join('')}
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Estados de animação (abaixo do builder)</h3>
+    <p class="desc">A mesma criatura configurada no builder é renderizada em 4 poses de animação P0, lado a lado.</p>
+    <table class="feat-table">
+      <thead><tr><th>Estado</th><th>Descrição</th><th>Prioridade</th></tr></thead>
+      <tbody>
+        <tr><td>Ocioso (idle)</td><td>Postura de repouso, respiração suave</td><td><span class="tag tag-p0">P0</span></td></tr>
+        <tr><td>Locomoção</td><td>Passo lento, balanço do corpo</td><td><span class="tag tag-p0">P0</span></td></tr>
+        <tr><td>Forragear</td><td>Inclinação para frente, coleta de recurso</td><td><span class="tag tag-p0">P0</span></td></tr>
+        <tr><td>Alerta</td><td>Tensão, postura defensiva</td><td><span class="tag tag-p0">P0</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>Variações de silhueta (especiação)</h3>
+    <p class="desc">Abaixo dos estados de animação, aparecem 5 ramos de especiação — variações da forma-mãe que ilustram como a criatura divergiria em condições ambientais distintas (clima frio, árido, aquático, etc.). São a base visual para o sistema de espécies do GDD §3.2.</p>
+  </div>
+
+  <div class="block">
+    <h3>Usar o sistema em C# (Unity)</h3>
+    <p class="desc">A função <span class="mono" style="font-family:var(--mono);font-size:11.5px;color:var(--info)">CR.build(opts)</span> recebe um objeto de parâmetros e retorna um SVG string. Em C#, o princípio equivale a montar SpriteRenderers em camadas (corpo, padrão, olhos, ornamento) conforme o genoma de cada indivíduo.</p>
+    <div class="annot tip">O mesmo parâmetro de genoma que gera a imagem na Biblioteca é o que o jogo persiste por indivíduo no save. Isso garante que a criatura visual seja determinística — o mesmo genoma sempre produz a mesma aparência.</div>
+  </div>`;
+}
+
+function buildLibEscrita() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Escrita procedural</div>
+    <h2>Escrita procedural</h2>
+    <p>Cada civilização inventa um sistema de escrita visual próprio — ilegível no início, "traduzível" conforme o jogador aprende a cultura. Os glifos são gerados algoritmicamente a partir de 6 estilos distintos.</p>
+    <div class="refs">Arquivo-fonte: <strong>meta-assets.js</strong> — funções <strong>glyphSVG(style, seed)</strong> e <strong>word(style, seed, n)</strong></div>
+  </div>
+
+  <div class="block">
+    <h3>Os 6 estilos de escrita</h3>
+    <table class="feat-table">
+      <thead><tr><th>Cultura</th><th>Estilo visual</th><th>Sensação</th></tr></thead>
+      <tbody>
+        <tr><td>A — Angular</td><td>Traços retos entre nós de uma grade 3×3</td><td>Rígida, gravada em pedra ou metal</td></tr>
+        <tr><td>B — Orgânica</td><td>Curvas Bézier contínuas entre os mesmos nós</td><td>Fluida, pintada com pincel</td></tr>
+        <tr><td>C — Radial</td><td>Traços irradiam de um centro; arcos entre pontos</td><td>Ritual, solar, cósmica</td></tr>
+        <tr><td>D — Rúnica</td><td>Haste vertical com 2–4 ramos diagonais</td><td>Entalhada em madeira ou osso</td></tr>
+        <tr><td>E — Cuneiforme</td><td>Cunhas (triângulos) em 4 orientações</td><td>Impressa em barro, contabilidade</td></tr>
+        <tr><td>F — Espiral</td><td>Voluta que se abre + traço de saída</td><td>Astronômica, cíclica</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>Como a geração funciona</h3>
+    <ul class="steps">
+      <li><span class="step-num">1</span><div class="step-body"><strong>Semente (seed) determinística:</strong> o mesmo número sempre gera o mesmo glifo. A seed deriva do nome ou idioma da civilização — sem aleatoriedade vazia.</div></li>
+      <li><span class="step-num">2</span><div class="step-body"><strong>Grade de 9 nós (3×3):</strong> os traços conectam ou partem desses nós segundo regras que diferem por estilo.</div></li>
+      <li><span class="step-num">3</span><div class="step-body"><strong>Palavras:</strong> a função <span class="mono" style="font-family:var(--mono);font-size:11.5px;color:var(--info)">word(style, seed, n)</span> fileira N glifos do mesmo estilo para simular texto.</div></li>
+    </ul>
+    <div class="annot">Na Biblioteca, cada cultura exibe uma fileira de 8 glifos distintos + uma "palavra" de 5 glifos. Isso dá a sensação de um sistema de escrita completo, mesmo sendo procedural.</div>
+  </div>
+
+  <div class="block">
+    <h3>Onde a escrita aparece no jogo</h3>
+    <ul class="sec-list">
+      <li><span class="label">Construções</span> Inscrições nas paredes de templos, armazéns e monumentos</li>
+      <li><span class="label">Artefatos</span> Tábuas, pinturas rupestres, estandartes</li>
+      <li><span class="label">Crônica</span> O nome próprio da civilização é escrito no idioma emergente</li>
+      <li><span class="label">Ficha de Indivíduo</span> O nome da criatura usa os glifos da cultura dela</li>
+    </ul>
+  </div>`;
+}
+
+function buildLibEfeitos() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Efeitos & partículas</div>
+    <h2>Efeitos & partículas</h2>
+    <p>Elementos visuais animados — o que "vive" na tela além das criaturas e construções. Todos são SVGs com gradientes e formas geométricas, recoloríveis pelos tokens da paleta.</p>
+    <div class="refs">Arquivo-fonte: <strong>meta-assets.js</strong> (seção de efeitos)</div>
+  </div>
+
+  <div class="block">
+    <h3>Catálogo de efeitos</h3>
+    <table class="feat-table">
+      <thead><tr><th>Efeito</th><th>Função no jogo</th><th>API</th></tr></thead>
+      <tbody>
+        <tr><td>Pedra-coração</td><td>Núcleo luminoso da aldeia (fogueira / cristal central). O ponto de vida visível da civilização.</td><td class="mono">heartstone(color)</td></tr>
+        <tr><td>Ondulação de nudge</td><td>Feedback visual do toque do jogador no mundo. Ondas concêntricas irradiam do ponto de contato.</td><td class="mono">nudgeRipple(color)</td></tr>
+        <tr><td>Pulso de sinal</td><td>Emoção ou estado irradiando de uma criatura. Halo pulsante na cor da rampa de sinal.</td><td class="mono">signalPulse(color)</td></tr>
+        <tr><td>Raio do observador</td><td>A influência divina descendo do céu. Cone de luz dourada que sinaliza onde o jogador focou.</td><td class="mono">lightBeam(color)</td></tr>
+        <tr><td>Clima — Chuva</td><td>Partícula de chuva para biomas úmidos ou eventos climáticos.</td><td class="mono">weather('rain')</td></tr>
+        <tr><td>Clima — Neve</td><td>Partícula de neve para bioma de tundra ou inverno.</td><td class="mono">weather('snow')</td></tr>
+        <tr><td>Clima — Brasas</td><td>Faíscas para bioma vulcânico ou incêndio.</td><td class="mono">weather('ember')</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>Como animar no Unity</h3>
+    <p class="desc">Os SVGs são frames estáticos — a animação é feita por escala e opacidade em runtime:</p>
+    <ul class="sec-list">
+      <li><span class="label">Ondulação / pulso</span> Scale de 0.8 → 1.2 com ease-out, opacity de 1 → 0. Loop.</li>
+      <li><span class="label">Raio do observador</span> Opacity 0 → 0.8 → 0 ao longo de 0.6 s. Uma instância por foco.</li>
+      <li><span class="label">Pedra-coração</span> Scale oscila suavemente (0.95 → 1.05) em loop lento (2 s).</li>
+      <li><span class="label">Clima</span> Partículas instanciadas em posições aleatórias, movem-se em direção fixa, destruídas ao sair da tela.</li>
+    </ul>
+  </div>`;
+}
+
+function buildLibFlora() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Biomas — Flora & Props</div>
+    <h2>Biomas — Flora & Props</h2>
+    <p>Sprites vetoriais isolados de flora e elementos naturais (árvores, rochas, cristais, plantas, fungos) no mesmo estilo de contorno das criaturas. Cada bioma é uma seleção de props sobre uma paleta própria.</p>
+    <div class="refs">Arquivo-fonte: <strong>biomes.js</strong> · funções <strong>propSVG(key, palette)</strong> e <strong>scene(biomeKey)</strong></div>
+  </div>
+
+  <div class="block">
+    <h3>O que está disponível</h3>
+    <ul class="sec-list">
+      <li><span class="label">Catálogo de props</span> Todos os sprites isolados, exibidos com a paleta neutra. Passe o mouse para ver o nome do prop.</li>
+      <li><span class="label">Cenas por bioma</span> Preview de produção: os mesmos props compostos na paleta de cada bioma — mostra como o ambiente "vai parecer" in-game.</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h3>Biomas disponíveis</h3>
+    <p class="desc">17 biomas no total: 8 naturais + variantes fantásticas. Cada um tem uma paleta definida com até 5 cores (folhagem primária, folhagem secundária, rocha, acento, chão) e uma lista de props atribuídos.</p>
+    <table class="feat-table">
+      <thead><tr><th>Categoria</th><th>Biomas</th></tr></thead>
+      <tbody>
+        <tr><td>Naturais P0</td><td>Pradaria / Savana · Floresta · Água</td></tr>
+        <tr><td>Naturais P1</td><td>Deserto · Tundra / Gelo · Montanha · Pântano · Vulcânico · Costa</td></tr>
+        <tr><td>Fantásticos</td><td>Floresta de cristais · Cerrado místico · Abissal · Tundra etérea · Floresta sombria · Cogumelos · Areia dourada · Bosque arco-íris</td></tr>
+      </tbody>
+    </table>
+    <div class="annot tip">As variações sazonais de cada bioma são feitas recolorindo a paleta — a mesma cena com os props idênticos, mas com cores de outono, inverno ou primavera. Nenhum sprite novo precisa ser desenhado.</div>
+  </div>
+
+  <div class="block">
+    <h3>Princípio de recoloração</h3>
+    <p class="desc">Todos os props usam a paleta como parâmetro — <span class="mono" style="font-family:var(--mono);font-size:11.5px;color:var(--info)">propSVG(key, palette)</span>. Isso significa que uma única definição de árvore pode aparecer verde (floresta), amarelada (savana seca) ou roxa (floresta fantástica) sem duplicação de asset.</p>
+  </div>`;
+}
+
+function buildLibBld() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Construções modulares</div>
+    <h2>Construções modulares</h2>
+    <p>Estruturas vetoriais por estágio sociopolítico — da caverna pré-histórica ao galpão industrial. A mesma peça muda de aparência só pela paleta cultural, sem redesenho.</p>
+    <div class="refs">Arquivo-fonte: <strong>buildings.js</strong> + <strong>buildings-extra2 a 5.js</strong></div>
+  </div>
+
+  <div class="block">
+    <h3>Os 11 estágios de evolução</h3>
+    <table class="feat-table">
+      <thead><tr><th>Estágio</th><th>Estruturas típicas</th></tr></thead>
+      <tbody>
+        <tr><td>Pré-histórico</td><td>Caverna, fogueira, totem primitivo</td></tr>
+        <tr><td>Bando nômade</td><td>Abrigo de ramos, depósito de pedras, altar natural</td></tr>
+        <tr><td>Assentamento tribal</td><td>Cabana, armazém, poço, totem, fogueira-central</td></tr>
+        <tr><td>Aldeia agrária</td><td>Casa de madeira, celeiro, mercado, templo simples</td></tr>
+        <tr><td>Cidade-estado</td><td>Muralha, torre de guarda, praça, templo maior</td></tr>
+        <tr><td>Feudal / Medieval</td><td>Castelo, catedral, guilda, estábulo</td></tr>
+        <tr><td>Renascentista</td><td>Palácio, biblioteca, observatório, banco</td></tr>
+        <tr><td>Industrial</td><td>Fábrica, ferrovia, galpão, chaminé</td></tr>
+        <tr><td>Moderno</td><td>Arranha-céu, laboratório, hospital, estádio</td></tr>
+        <tr><td>Informacional</td><td>Data center, antena, drone, farm solar</td></tr>
+        <tr><td>Pós-humano</td><td>Torre orgânica, cristal de energia, portal, arcologia</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>Culturas (variantes de paleta)</h3>
+    <p class="desc">10 estilos culturais estão disponíveis — a mesma aldeia renderizada com cada um. Na Biblioteca, a seção "Variantes culturais" exibe todas as 10 versões lado a lado para comparação.</p>
+    <table class="feat-table">
+      <thead><tr><th>Cultura</th><th>Paleta dominante</th></tr></thead>
+      <tbody>
+        <tr><td>Floresta</td><td>Verdes profundos, madeira, pedra musgo</td></tr>
+        <tr><td>Deserto</td><td>Dourado, terracota, bege</td></tr>
+        <tr><td>Ártico</td><td>Azul-gelo, branco, pedra cinza</td></tr>
+        <tr><td>Vulcânico</td><td>Cinza basalto, laranja lava, preto</td></tr>
+        <tr><td>Oceânico</td><td>Azul-teal, coral, branco-sal</td></tr>
+        <tr><td>Medieval</td><td>Pedra cinza, telhado marrom, madeira escura</td></tr>
+        <tr><td>Místico</td><td>Roxo, dourado, cristal</td></tr>
+        <tr><td>Pós-humano</td><td>Preto, ciano, superfícies metálicas</td></tr>
+        <tr><td>Nômade</td><td>Palha, tecido colorido, terra</td></tr>
+        <tr><td>Industrial</td><td>Aço, ferrugem, vidro cinza</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>Variante Ruínas</h3>
+    <p class="desc">Um gerador procedural de destruição: dado qualquer estrutura, a variante Ruínas remove o topo, racha as paredes e adiciona entulho + vegetação invasora. Ideal para representar guerras, abandono ou colapso. A Biblioteca exibe um showcase de ruínas na parte inferior da seção.</p>
+  </div>`;
+}
+
+function buildLibMarca() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Marca & Molduras</div>
+    <h2>Marca & Molduras de HUD</h2>
+    <p>A identidade visual do jogo e os elementos de interface que envolvem a HUD. Todos são SVGs escaláveis, prontos para exportação.</p>
+    <div class="refs">Arquivo-fonte: <strong>meta-assets.js</strong></div>
+  </div>
+
+  <div class="block">
+    <h3>O logotipo — "a semente que ramifica"</h3>
+    <p class="desc">A marca de Gênese é uma espiral que nasce de um único ponto (a criação) e termina numa bifurcação que brota (a evolução / divergência das espécies). Funciona em fundo escuro e claro, e em três tamanhos.</p>
+    <ul class="sec-list">
+      <li><span class="label">Lockup horizontal</span> Marca + tipografia "GÊNESE" para cabeçalhos</li>
+      <li><span class="label">Marca isolada (64 px)</span> Para uso em destaque</li>
+      <li><span class="label">Marca isolada (48 px)</span> Para uso em painéis</li>
+      <li><span class="label">Marca isolada (32 px)</span> Para uso compacto, ícone do app</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h3>Molduras de HUD (9-slice)</h3>
+    <p class="desc">Vetores desenhados para ser importados no Unity com <strong>Image type: Sliced</strong> — as bordas decoradas ficam fixas e o centro estica para qualquer tamanho.</p>
+    <table class="feat-table">
+      <thead><tr><th>Moldura</th><th>Uso</th><th>Pontos de corte</th></tr></thead>
+      <tbody>
+        <tr><td>Painel / card</td><td>Qualquer caixa de informação na HUD (Atenção, Cards de evento)</td><td>Bordas nos cantos decorados (~12 px)</td></tr>
+        <tr><td>Barra de recurso</td><td>Barra de Atenção e qualquer barra horizontal de estatística</td><td>Bordas laterais (~8 px)</td></tr>
+        <tr><td>Botão redondo</td><td>Botões da toolbar e ação contextual</td><td>Circular, raio fixo</td></tr>
+      </tbody>
+    </table>
+    <div class="annot tip">As bordas das molduras têm cantos com bolinhas roxas (Influência) — detalhe de identidade que conecta a UI ao vocabulário visual do jogador.</div>
+  </div>`;
+}
+
+function buildLibDestino() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Cartões de Destino Final</div>
+    <h2>Cartões de Destino Final</h2>
+    <p>O jogo não tem vitória — tem destinos. Sete possíveis fins para uma civilização, cada um com tom emocional diferente. Os cartões são a tela-resumo compartilhável ao final (ou a qualquer momento) da partida.</p>
+    <div class="refs">GDD §6.4 · AA §7</div>
+  </div>
+
+  <div class="block">
+    <h3>Os 7 destinos</h3>
+    <table class="feat-table">
+      <thead><tr><th>Destino</th><th>Descrição</th><th>Tom</th></tr></thead>
+      <tbody>
+        <tr><td>Transcendência</td><td>A civilização supera a forma biológica</td><td>Sublime, ambíguo</td></tr>
+        <tr><td>Estagnação eterna</td><td>Equilíbrio estável sem evolução possível</td><td>Melancólico, pacífico</td></tr>
+        <tr><td>Colapso ecológico</td><td>O ambiente se esgota; a população desaba</td><td>Trágico, evitável</td></tr>
+        <tr><td>Autodestruição</td><td>A guerra leva à aniquilação mútua</td><td>Trágico, sombrio</td></tr>
+        <tr><td>Absorção</td><td>Outra civilização a integra</td><td>Agridoce</td></tr>
+        <tr><td>Diáspora</td><td>Fragmenta-se e se espalha pelo mundo</td><td>Melancólico, aberto</td></tr>
+        <tr><td>Continuidade</td><td>Segue indefinidamente, sempre mudando</td><td>Aberto, cíclico</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>Design dos cartões</h3>
+    <p class="desc">Um layout único, 7 sabores de cor e ícone. Cada cartão tem: ícone grande na cor do destino · nome do destino · descrição de uma linha · tom emocional em itálico.</p>
+    <div class="annot">Os cartões são compartilháveis fora do jogo — devem ser reconhecíveis como "de Gênese" sem contexto adicional. A moldura usa o mesmo vocabulário de contorno das outras peças de UI.</div>
+  </div>`;
+}
+
+function buildLibUnity() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">BIBLIOTECA · Integração</div>
+    <h2>Exportar / Unity (C#)</h2>
+    <p>Como levar os assets da Biblioteca para o projeto Unity. Três canais de exportação: SVGs individuais, tokens de cor e o sistema de criatura paramétrica.</p>
+  </div>
+
+  <div class="block">
+    <h3>Canais de exportação</h3>
+    <div class="card-grid c3">
+      <div class="card">
+        <div class="card-title">SVGs de ícones</div>
+        <div class="card-body"><p>Gerados pelo botão na seção "Exportar / Unity". Baixam como <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">svg/icons/</span>. Arraste para <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">Assets/Icons/</span> no Unity.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title">SVGs de criatura</div>
+        <div class="card-body"><p>6 variações de silhueta + 4 poses são geradas automaticamente. Baixam como <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">svg/creature/</span>.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title">tokens.json</div>
+        <div class="card-body"><p>Paleta-base + rampas em JSON. Converta para a classe estática <span class="mono" style="font-family:var(--mono);font-size:11px;color:var(--info)">GenesePalette</span> em C# (template na seção de Unity).</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Checklist de pipeline</h3>
+    <table class="feat-table">
+      <thead><tr><th>Item</th><th>Status</th><th>Nota</th></tr></thead>
+      <tbody>
+        <tr><td>Ícones monocromáticos</td><td>✅ Pronto</td><td>Tingir via SpriteRenderer.color — não duplicar por cor</td></tr>
+        <tr><td>Criatura em camadas</td><td>✅ Pronto</td><td>Montar corpo · padrão · olhos · ornamento por genoma em C#</td></tr>
+        <tr><td>Sprite sheets de animação</td><td>⬜ A fazer</td><td>Derivar das 4 poses (idle / walk / forage / alert)</td></tr>
+        <tr><td>9-slice das molduras</td><td>✅ Pronto</td><td>Image type Sliced, bordas nos studs (~12 px)</td></tr>
+        <tr><td>tokens.json importado</td><td>⬜ A fazer</td><td>Converter para GenesePalette.cs</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+/* ====================== WIREFRAMES ====================== */
+
+function buildWfNav() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Navegação & Tweaks</div>
+    <h2>Navegação & Tweaks</h2>
+    <p>Os Wireframes têm a mesma estrutura de barra lateral da Biblioteca, com um painel adicional de Tweaks — controles de visualização que alteram como os wireframes são exibidos sem mudar o conteúdo.</p>
+  </div>
+
+  <div class="block">
+    <h3>Estrutura da barra lateral</h3>
+    <table class="feat-table">
+      <thead><tr><th>Grupo</th><th>Folhas</th></tr></thead>
+      <tbody>
+        <tr><td>Telas (UI)</td><td>Mundo Vivo (HUD) · Tela de Influência · Painel da Civilização · Ficha de Figura · Códice Cultural · Mapa + Overlays · Crônica</td></tr>
+        <tr><td>Assets de arte</td><td>Criaturas · Ambiente & Biomas · Construções & Território · Ícones & Overlays</td></tr>
+        <tr><td>Meta & Loja</td><td>Escrita Procedural · Artefatos Compartilháveis · Marca, Loja & Onboarding</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>O painel Tweaks</h3>
+    <p class="desc">Os Tweaks ficam no canto superior direito e são abertos pelo ícone de ajuste do editor. Permitem alterar a visualização dos wireframes em tempo real — as configurações ficam salvas entre sessões.</p>
+    <div class="control-row">
+      <div class="control-box">
+        <div class="cb-label">Barra de ferramentas</div>
+        <div class="cb-name">Posição do HUD</div>
+        <div class="cb-desc">Inferior · Centro · Esquerda · Direita. Visível na folha "Mundo Vivo (HUD)". Permite comparar qual posição funciona melhor no layout.</div>
+      </div>
+      <div class="control-box">
+        <div class="cb-label">Densidade</div>
+        <div class="cb-name">Espaçamento</div>
+        <div class="cb-desc">Regular ou Compacta. Compacta reduz margens e gaps dos grids — útil para ver mais conteúdo numa tela pequena.</div>
+      </div>
+      <div class="control-box">
+        <div class="cb-label">Anotações</div>
+        <div class="cb-name">Mostrar / Ocultar</div>
+        <div class="cb-desc">Liga ou desliga todos os callouts de anotação das folhas. Útil para apresentações mais limpas.</div>
+      </div>
+      <div class="control-box">
+        <div class="cb-label">Tom do papel</div>
+        <div class="cb-name">Claro / Escuro</div>
+        <div class="cb-desc">Alterna o fundo entre o papel creme claro (padrão) e um tema escuro. Permite verificar contraste e legibilidade em ambos os modos.</div>
+      </div>
+    </div>
+    <div class="annot">As preferências dos Tweaks ficam salvas em <strong>localStorage</strong> — continuam entre recargas da página e sessões do navegador. Para resetar, abra o DevTools e limpe o localStorage.</div>
+  </div>
+
+  <div class="block">
+    <h3>Como ler os placeholders</h3>
+    <p class="desc">Os wireframes usam "slots" — caixas tracejadas que representam um asset ainda a produzir. Cada slot tem:</p>
+    <table class="feat-table">
+      <thead><tr><th>Elemento</th><th>Significado</th></tr></thead>
+      <tbody>
+        <tr><td>Cor de fundo + tint</td><td>Semântica do conteúdo: roxo = influência do jogador · verde = vida · terracota = tensão · dourado = recurso · azul = dado/info · cinza = neutro</td></tr>
+        <tr><td>Título em negrito</td><td>O que esse slot deve conter (ex: "Retrato paramétrico")</td></tr>
+        <tr><td>Subtítulo em mono</td><td>Notas de conteúdo ou especificações</td></tr>
+        <tr><td>Pílula <span class="tag tag-p0">P0</span></td><td>Prioridade de entrega — P0 = crítico para o primeiro build jogável</td></tr>
+        <tr><td>Pílula <span class="tag-ref" style="display:inline-block;font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:20px;border:1.5px solid var(--info);background:#D6E2EC;color:#234a63">modular</span></td><td>Asset modular — deve ser feito em partes reutilizáveis</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function buildWfHud() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Tela principal</div>
+    <h2>Mundo Vivo (HUD)</h2>
+    <p>A tela principal e sempre presente do jogo — a simulação ao vivo com uma moldura de leitura instantânea sobreposta. Tudo que o jogador precisa ler de relance mora aqui.</p>
+    <div class="refs">GDD §9.3 · AA §5.1 · M12 · M13</div>
+  </div>
+
+  <div class="block">
+    <h3>Anatomia do HUD</h3>
+    <table class="feat-table">
+      <thead><tr><th>Elemento</th><th>Posição</th><th>Conteúdo</th></tr></thead>
+      <tbody>
+        <tr><td>Atenção</td><td>Canto sup. esquerdo</td><td>Recurso central do jogador. Ícone rúnico + barra de progresso. Regenera devagar; cresce conforme a civilização "crê" na presença do jogador (vínculo com religiosidade — GDD §5.1).</td></tr>
+        <tr><td>Ciclo + Tempo</td><td>Centro superior</td><td>Relógio da partida. Número de ciclos simulados + tempo de jogo. Clicar controla a velocidade (pausar / acelerar).</td></tr>
+        <tr><td>População</td><td>Canto sup. direito</td><td>Contagem total + barra de tendência + 3 sub-indicadores: indivíduos (☻), sustento (☖), moral coletiva (♥).</td></tr>
+        <tr><td>Cards laterais</td><td>Coluna direita</td><td>O que a civilização decidiu por conta própria: Melhoria em andamento · Plano de migração · Pesquisa ativa. São <strong>leitura, não comando</strong>.</td></tr>
+        <tr><td>Barra de ferramentas</td><td>Ajustável (Tweak)</td><td>6 verbos de observação: Observar · Ambiente · Gráficos · Povo · Códice + ✦ contextual do bioma.</td></tr>
+      </tbody>
+    </table>
+    <div class="annot tip">Use o Tweak de <strong>Posição da barra de ferramentas</strong> para comparar as 4 posições (inferior, central, esquerda, direita) sem editar código.</div>
+  </div>
+
+  <div class="block">
+    <h3>Estados da moldura (4 modos)</h3>
+    <p class="desc">A mesma tela, leituras diferentes — o modo ativo é indicado pelo botão selecionado na barra.</p>
+    <table class="feat-table">
+      <thead><tr><th>Modo</th><th>O que muda no mundo</th></tr></thead>
+      <tbody>
+        <tr><td>Observar</td><td>Foco livre; densidade de eventos sobe onde o jogador olha. Cursor de observação ativo.</td></tr>
+        <tr><td>Pressão Ambiental</td><td>Pincéis de clima / recurso / geografia ficam acessíveis. O cursor vira uma ferramenta.</td></tr>
+        <tr><td>Nudge</td><td>Paleta de intervenções pontuais aparece. Custo em Atenção é exibido.</td></tr>
+        <tr><td>Overlay ativo</td><td>O mundo é repintado pela estatística selecionada (usa a rampa semântica correspondente).</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function buildWfInfluencia() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Tela de Influência</div>
+    <h2>Tela de Influência</h2>
+    <p>O coração mecânico do jogo — materializa "influência, não controle". Três alavancas, todas indiretas e pagas em Atenção. Nenhuma tem efeito fixo: tudo passa pelo filtro cultural.</p>
+    <div class="refs">GDD §5 · AA §5.1 · M12</div>
+  </div>
+
+  <div class="block">
+    <h3>As 3 alavancas de influência</h3>
+    <div class="card-grid c3">
+      <div class="card">
+        <span class="card-tag tag-assets">Alavanca 1</span>
+        <div class="card-title">Pressão ambiental</div>
+        <div class="card-body"><p>Você altera o mundo, não as criaturas. Elas reagem por conta própria.</p><p><strong>Controles:</strong> Clima (esfriar / aquecer / chuva / seca) · Recursos (secar rio / brotar bosque) · Perigos (predador / doença) · Geografia (erguer serra — custo altíssimo).</p></div>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-assets">Alavanca 2</span>
+        <div class="card-title">Nudges (intervenção pontual)</div>
+        <div class="card-body"><p>Estímulos diretos mas interpretáveis. O mesmo Sinal pode ser chamado divino, mau presságio ou fenômeno curioso, dependendo da cultura.</p><p><strong>Nudges P0:</strong> Sinal · Proteção · Faísca de mutação · Semente de ideia · Inspiração.</p><p>Cada nudge mostra o custo em Atenção e fica esmaecido se o recurso for insuficiente.</p></div>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-assets">Alavanca 3</span>
+        <div class="card-title">Direcionamento de atenção</div>
+        <div class="card-body"><p>Onde o jogador olha floresce mais. O cursor de foco aumenta a densidade de eventos na área. O medidor de Atenção mostra gasto e regeneração em tempo real.</p></div>
+      </div>
+    </div>
+    <div class="annot warn">A UI nunca deve prometer um efeito — deve sugerir incerteza. Confirmar um nudge mostra um "recibo" sóbrio: <em>você plantou um estímulo; a resposta é deles</em>.</div>
+  </div>`;
+}
+
+function buildWfCiv() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Painel da Civilização</div>
+    <h2>Painel da Civilização</h2>
+    <p>O painel macro — centenas de números, mas o princípio é um: as macro-estatísticas emergem das micro. O jogador observa e influencia condições, nunca define valores diretos.</p>
+    <div class="refs">GDD §4.3 · AA §5.1 · M13</div>
+  </div>
+
+  <div class="block">
+    <h3>Conteúdo do painel</h3>
+    <p class="desc">Dois painéis lado a lado: macro-estatísticas à esquerda, estágio e tendências à direita.</p>
+    <ul class="sec-list">
+      <li><span class="label">12 macro-estatísticas</span> Agressividade · Expansionismo · Taxa reprodutiva · Coesão social · Abertura · Inovação · Religiosidade · Igualitarismo · Sustentabilidade · Moral coletiva · Estabilidade · Curiosidade coletiva</li>
+      <li><span class="label">Estágio sociopolítico</span> Bando → Tribo → Aldeia → Estado → Império (e além)</li>
+      <li><span class="label">Sparklines de tendência</span> Cada estatística ao longo do tempo</li>
+      <li><span class="label">Eventos recentes</span> Marcos, crises, surgimento de Figuras</li>
+    </ul>
+    <div class="annot tip">Cada barra de estatística abre um <strong>histograma de dispersão</strong> — não só a média, mas o quanto os indivíduos divergem dela. Essa dispersão é a semente de cismas e especiação.</div>
+  </div>
+
+  <div class="block">
+    <h3>Código de cores das barras</h3>
+    <p class="desc">As barras do painel usam as mesmas rampas semânticas da Biblioteca, por grupo de estatística:</p>
+    <table class="feat-table">
+      <thead><tr><th>Cor</th><th>Grupo</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--tensao)">■ Terracota</td><td>Tensão: Agressividade, Expansionismo</td></tr>
+        <tr><td style="color:var(--vida)">■ Verde</td><td>Vitalidade: Taxa reprodutiva, Coesão social, Moral</td></tr>
+        <tr><td style="color:var(--fe)">■ Roxo</td><td>Fé: Religiosidade</td></tr>
+        <tr><td style="color:var(--info)">■ Azul</td><td>Cognição: Abertura, Inovação, Curiosidade</td></tr>
+        <tr><td style="color:var(--recurso)">■ Dourado</td><td>Recurso: Sustentabilidade</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function buildWfFicha() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Ficha de Figura</div>
+    <h2>Ficha de Indivíduo / Figura</h2>
+    <p>O zoom máximo — uma única criatura. Três blocos: genética herdada, traços adquiridos e papel social. Algumas criaturas viram Figuras: profetas, inventores e tiranos cujo destino muda toda a civilização.</p>
+    <div class="refs">GDD §4.1–4.2 · AA §5.1 · M05</div>
+  </div>
+
+  <div class="block">
+    <h3>Os 3 blocos da ficha</h3>
+    <div class="card-grid c3">
+      <div class="card">
+        <div class="card-title">Identidade</div>
+        <div class="card-body">
+          <p><strong>Retrato paramétrico</strong> — renderizado pelo genoma + cultura (o mesmo builder da Biblioteca).</p>
+          <p><strong>Nome no idioma local</strong> — gerado pela escrita procedural da cultura da criatura.</p>
+          <p><strong>Badge "Figura notável"</strong> — aparece apenas para indivíduos excepcionais que atingem papel de destaque.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Genética (herdada)</div>
+        <div class="card-body">
+          <p>6 traços físicos com barras: Força · Velocidade · Percepção · Fertilidade · Longevidade · Resistência a doenças.</p>
+          <p>+ Genoma comportamental: 24 predisposições (medo ↔ coragem, curiosidade, altruísmo…).</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Adquirido & Social</div>
+        <div class="card-body">
+          <p>Habilidades aprendidas (caça, construção, cura) · Memórias & traumas marcantes · Papel & prestígio (líder, curandeiro, artista) · Relações (aliados, rivais, parentes).</p>
+        </div>
+      </div>
+    </div>
+    <div class="annot warn">Da ficha de uma Figura saem apenas dois botões de influência: <strong>Proteção</strong> (reduzir seu risco) ou ignorar. A morte prematura de uma Figura é um dos momentos mais consequentes do jogo.</div>
+  </div>`;
+}
+
+function buildWfCodice() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Códice Cultural</div>
+    <h2>Códice Cultural / Religioso</h2>
+    <p>A enciclopédia viva da civilização — o filtro que reinterpreta todas as suas intervenções. Crenças, tabus, mitos, arte, idioma e a imagem que a civilização faz de você.</p>
+    <div class="refs">GDD §3.7–3.8 · AA §5.1 · M09 · M10</div>
+  </div>
+
+  <div class="block">
+    <h3>Os 3 painéis do Códice</h3>
+    <table class="feat-table">
+      <thead><tr><th>Painel</th><th>Conteúdo</th></tr></thead>
+      <tbody>
+        <tr><td>Cultura</td><td>Valores & tabus (o sagrado e o proibido) · Mitos & ritos (nascimento, morte, colheita) · Arte & ornamento (padrões visíveis em corpos e construções)</td></tr>
+        <tr><td>Religião</td><td>Estágio religioso (Animismo → Panteão → Culto → Doutrina → Teologia) · Fervor / Dogmatismo / Organização como barras · <strong>Imagem do jogador</strong> (deus, trapaceiro, força da natureza ou demônio)</td></tr>
+        <tr><td>Idioma emergente</td><td>Sistema de escrita no estilo da cultura · Régua de tradução (gradualmente legível ao jogador)</td></tr>
+      </tbody>
+    </table>
+    <div class="annot tip">A <strong>Imagem do jogador</strong> no painel de Religião é um dos elementos mais únicos do jogo — é o reflexo de como a civilização interpreta as suas ações. Pode mudar radicalmente ao longo da partida.</div>
+  </div>`;
+}
+
+function buildWfMapa() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Mapa</div>
+    <h2>Mapa + Overlays</h2>
+    <p>A visão ampla. Sobreposições alternáveis repintam o mundo por estatística — para localizar tensões e padrões espaciais num instante. As cores são consistentes com as paletas semânticas.</p>
+    <div class="refs">GDD §8.5 · AA §5.1, §5.2 · M13 · DV §3.2, §6.1</div>
+  </div>
+
+  <div class="block">
+    <h3>Overlays disponíveis</h3>
+    <table class="feat-table">
+      <thead><tr><th>Overlay</th><th>Rampa</th><th>O que mostra</th></tr></thead>
+      <tbody>
+        <tr><td>Agressividade</td><td>Azul-cinza → vermelho escuro</td><td>Regiões de alta tensão e risco de conflito</td></tr>
+        <tr><td>Recursos</td><td>Marrom → dourado</td><td>Abundância ou escassez de recursos por território</td></tr>
+        <tr><td>Fé / Religiosidade</td><td>Cinza → roxo escuro</td><td>Concentração de fervor religioso por área</td></tr>
+        <tr><td>Densidade populacional</td><td>Verde claro → verde escuro</td><td>Onde a vida está concentrada</td></tr>
+        <tr><td>Divergência linguística</td><td>Azul → terracota</td><td>Fronteiras de incompreensão linguística</td></tr>
+        <tr><td>Sustentabilidade</td><td>Neutro</td><td>Saúde ambiental por região</td></tr>
+      </tbody>
+    </table>
+    <div class="annot">Os overlays usam exatamente as mesmas rampas definidas na seção "Cores & Tokens" da Biblioteca. A cor de um overlay e a cor de uma barra de estatística são sempre idênticas para a mesma métrica.</div>
+  </div>
+
+  <div class="block">
+    <h3>Elementos do mapa-múndi</h3>
+    <ul class="sec-list">
+      <li><span class="label">Territórios</span> Fronteiras emergentes — não desenhadas, conquistadas por presença</li>
+      <li><span class="label">Civilizações múltiplas</span> Possibilidade de várias civilizações simultâneas</li>
+      <li><span class="label">Rotas de migração</span> Visíveis quando populações se movem em massa</li>
+      <li><span class="label">Cicatrizes</span> Desmatamento, poluição, campos de batalha — persistentes, contam a história</li>
+    </ul>
+  </div>`;
+}
+
+function buildWfCronica() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Crônica</div>
+    <h2>Linha do Tempo / Crônica</h2>
+    <p>A história narrada da partida — com nomes próprios no idioma emergente, eras, Figuras, guerras e divergências. O artefato que o jogador relembra e compartilha. Cada partida vira uma lenda diferente.</p>
+    <div class="refs">GDD §9.4–9.5 · AA §5.1, §7 · M13</div>
+  </div>
+
+  <div class="block">
+    <h3>Os 2 painéis da Crônica</h3>
+    <div class="card-grid c2">
+      <div class="card">
+        <div class="card-title">Crônica narrativa</div>
+        <div class="card-body">
+          <p><strong>Cabeçalho da civilização:</strong> nome · espécie · destino (se alcançado).</p>
+          <p><strong>Eras & marcos:</strong> linguagem · agricultura · escrita · especiação — em ordem cronológica com os nomes no idioma emergente.</p>
+          <p><strong>Texto narrado:</strong> gerado do mesmo estado simulado — nenhuma linha de narração é escrita à mão pelos devs.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Lapso de evolução (GIF)</div>
+        <div class="card-body">
+          <p>Time-lapse da partida: bioma mudando de cor, fronteiras avançando, populações migrando e divergindo — em segundos.</p>
+          <p>Controles: <strong>Gerar · Reproduzir · Compartilhar</strong> (com moldura da identidade de Gênese).</p>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildWfAssets() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Assets de Arte</div>
+    <h2>Folhas de Assets de Arte</h2>
+    <p>Quatro folhas de produção de arte — cada uma descreve uma família de assets com checklists de entrega, prioridades e especificações para o ilustrador / pipeline técnico.</p>
+  </div>
+
+  <div class="block">
+    <h3>Criaturas (AA §2)</h3>
+    <p class="desc">A família de assets mais importante. Descreve o sistema paramétrico, as variações de silhueta para especiação, os 10 estados de animação e os ornamentos culturais.</p>
+    <table class="feat-table">
+      <thead><tr><th>Subseção</th><th>Conteúdo</th></tr></thead>
+      <tbody>
+        <tr><td>2.1 · Base & partes</td><td>Forma-mãe + 5 variações de silhueta + 4 tipos de textura (pelo/escama/pele/casca) + olhos + rampas de cor</td></tr>
+        <tr><td>Evolução visível</td><td>Sequência de 5 quadros mostrando deriva genética ao longo de eras e especiação em dois ambientes</td></tr>
+        <tr><td>2.2 · Animações</td><td>10 estados: idle/walk/forage/alert/sinal (P0) + cortejo/conflito/parental/trabalho/morte (P1)</td></tr>
+        <tr><td>2.3 · Ornamentos</td><td>Pinturas corporais · Adornos de papel social · Marcas religiosas</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="block">
+    <h3>Ambiente & Biomas (AA §3)</h3>
+    <p class="desc">Tilesets de 8 biomas (P0: pradaria e água · P1: floresta, deserto, tundra, montanha · P2: pântano, vulcânico), variações sazonais e fenômenos naturais.</p>
+  </div>
+
+  <div class="block">
+    <h3>Construções & Território (AA §4)</h3>
+    <p class="desc">Progressão de 4 estágios (bando → tribo → aldeia/cidade → estado), estruturas cívicas (templo, mercado, marcadores de território) e variantes por cultura.</p>
+  </div>
+
+  <div class="block">
+    <h3>Ícones & Overlays (AA §5.2)</h3>
+    <p class="desc">Catálogo de todos os ícones necessários com seus grupos funcionais (recurso, nudge, macro-estatística, evento/emoção, cursor), além de cursores de foco e indicadores de ação.</p>
+    <div class="annot tip">As pílulas de prioridade (<span class="tag tag-p0">P0</span> / <span class="tag tag-p1">P1</span> / <span class="tag tag-p2">P2</span>) nas folhas de assets indicam o que deve ser produzido primeiro para o build inicial jogável.</div>
+  </div>`;
+}
+
+function buildWfMeta() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">WIREFRAMES · Meta & Loja</div>
+    <h2>Meta, Loja & Onboarding</h2>
+    <p>Três folhas que cobrem os aspectos "para fora do jogo": a escrita procedural como asset de arte, os artefatos compartilháveis e todo o material de marca, loja e primeira partida.</p>
+  </div>
+
+  <div class="block">
+    <h3>Escrita Procedural (AA §6)</h3>
+    <p class="desc">Folha de produção para o sistema de glifos — descreve o conjunto de formas-base, as regras visuais por cultura e os artefatos in-game que exibem a escrita (tábuas, pinturas rupestres, estandartes).</p>
+  </div>
+
+  <div class="block">
+    <h3>Artefatos Compartilháveis (AA §7)</h3>
+    <p class="desc">Peças pensadas para viver fora do jogo — devem ser reconhecíveis como "de Gênese" sem contexto adicional:</p>
+    <ul class="sec-list">
+      <li><span class="label">GIF de evolução</span> Moldura + tipografia para o time-lapse exportável da partida</li>
+      <li><span class="label">Crônica</span> Layout da história narrada com os nomes no idioma emergente</li>
+      <li><span class="label">Cartão de destino final</span> 7 variantes da tela-resumo (detalhadas na Biblioteca)</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h3>Marca, Loja & Onboarding (AA §8)</h3>
+    <p class="desc">Cobre o fluxo completo de aquisição — do ícone na loja até os primeiros ciclos do jogo.</p>
+    <table class="feat-table">
+      <thead><tr><th>Parte</th><th>O que inclui</th></tr></thead>
+      <tbody>
+        <tr><td>Fluxo de onboarding</td><td>5 telas: Splash / Menu → Prólogo → Escolher o mundo → Semente cultural → Primeiros ciclos</td></tr>
+        <tr><td>Semente cultural</td><td>As 7 ideologias de início de partida (Aliança da Floresta · Clãs do Deserto · Sindicato Tóxico · Conselho Místico · Congregado Científico · Nômades do Ermo · Legião da Ordem)</td></tr>
+        <tr><td>Assets de loja</td><td>Logotipo · Ícone do app (Android + Steam) · Capsules da Steam · Capturas de tela · Feature graphic (Play) · Trailer · Splash · Tela de carregamento</td></tr>
+      </tbody>
+    </table>
+    <div class="annot tip">O onboarding ensina pela evolução — não por tutorial separado. A mecânica de "influência, não controle" é sentida logo nas primeiras telas, não explicada.</div>
+  </div>`;
+}
+
+function buildGlossario() {
+  return `
+  <div class="sec-head">
+    <div class="eyebrow">REFERÊNCIA</div>
+    <h2>Glossário de siglas</h2>
+    <p>Siglas usadas nas eyebrows, notas e referências de ambas as ferramentas. Todos os documentos-fonte estão na pasta <span class="mono" style="font-family:var(--mono);font-size:11.5px;color:var(--info)">docs/</span> do projeto.</p>
+  </div>
+
+  <div class="block">
+    <h3>Documentos-fonte</h3>
+    ${[
+      { k:'GDD', v:'<strong>Game Design Document</strong> — documento principal de design do jogo. Define mecânicas, sistemas, história, progressão e pilares de design. Seções referenciadas como §1, §2, etc.' },
+      { k:'AA', v:'<strong>Catálogo de Assets</strong> — lista completa de assets visuais que precisam existir, organizados por família e prioridade. A Biblioteca de Assets implementa o que o AA especifica.' },
+      { k:'DV', v:'<strong>Documento de Design Visual</strong> — direção de arte do projeto. Define paleta, tipografia, estilo visual, tom e diretrizes de composição.' },
+      { k:'M01–M14', v:'<strong>Documentos de Mecânica</strong> — cada mecânica tem seu próprio documento com especificação exaustiva. Referenciados no GDD com o número correspondente.' },
+    ].map(g => `<div class="gloss-row"><div class="gloss-key">${g.k}</div><div class="gloss-val">${g.v}</div></div>`).join('')}
+  </div>
+
+  <div class="block">
+    <h3>Prioridades de entrega</h3>
+    ${[
+      { k:'P0', v:'<strong>Crítico</strong> — necessário para o primeiro build jogável. Sem isso, o jogo não funciona.' },
+      { k:'P1', v:'<strong>Alta prioridade</strong> — necessário para o vertical slice / demo. O jogo fica incompleto sem.' },
+      { k:'P2', v:'<strong>Complementar</strong> — aprofunda a experiência mas pode ser entregue após o primeiro marco.' },
+    ].map(g => `<div class="gloss-row"><div class="gloss-key">${g.k}</div><div class="gloss-val">${g.v}</div></div>`).join('')}
+  </div>
+
+  <div class="block">
+    <h3>Termos técnicos frequentes</h3>
+    <table class="feat-table">
+      <thead><tr><th>Termo</th><th>Significado no contexto de Gênese</th></tr></thead>
+      <tbody>
+        <tr><td>9-slice</td><td>Técnica de stretching de sprites onde as bordas são fixas e o centro escala — garante que molduras mantenham as curvas independente do tamanho.</td></tr>
+        <tr><td>Rampa semântica</td><td>Gradiente de cor com significado fixo (ex: verde claro = pouca vida, verde escuro = muita vida). Sempre a mesma rampa para a mesma estatística em todo o jogo.</td></tr>
+        <tr><td>Genoma</td><td>O conjunto de parâmetros que define uma criatura (forma, textura, cor, apêndices, etc.). Determinístico — o mesmo genoma sempre gera a mesma aparência.</td></tr>
+        <tr><td>Figura notável</td><td>Indivíduo excepcional que atinge papel de destaque na civilização (profeta, inventor, tirano). Suas ações têm consequências desproporcionar ao seu tamanho.</td></tr>
+        <tr><td>Nudge</td><td>Intervenção pontual do jogador no mundo — estímulo interpretado pela civilização segundo seus valores culturais. Nunca tem efeito garantido.</td></tr>
+        <tr><td>Atenção</td><td>O recurso central do jogador — regenera devagar, é gasto em nudges e pressão ambiental, e cresce conforme a civilização "acredita" na presença do jogador.</td></tr>
+        <tr><td>Especiação</td><td>Processo pelo qual uma população se divide em duas espécies visualmente e biologicamente distintas por deriva genética e adaptação ambiental.</td></tr>
+        <tr><td>currentColor</td><td>Palavra-chave CSS/SVG que herda a cor do elemento pai. Usada nos ícones para permitir tingimento em runtime com uma única cópia do asset.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot">GÊNESE · Documentação das Ferramentas · v1.0 · Junho 2026<br>
+  Fonte de verdade: GDD v0.1 · Design Visual (DV) · Catálogo de Assets (AA).<br>
+  Esta documentação descreve o estado atual das ferramentas — atualizar sempre que uma nova seção ou comportamento for adicionado.</div>`;
+}
+
+// -------------------------------------------------------
+// APP SHELL
+// -------------------------------------------------------
+
+const BUILDERS = {
+  intro: buildIntro,
+  relacao: buildRelacao,
+  'lib-nav': buildLibNav,
+  'lib-cores': buildLibCores,
+  'lib-icones': buildLibIcones,
+  'lib-criatura': buildLibCriatura,
+  'lib-escrita': buildLibEscrita,
+  'lib-efeitos': buildLibEfeitos,
+  'lib-flora': buildLibFlora,
+  'lib-bld': buildLibBld,
+  'lib-marca': buildLibMarca,
+  'lib-destino': buildLibDestino,
+  'lib-unity': buildLibUnity,
+  'wf-nav': buildWfNav,
+  'wf-hud': buildWfHud,
+  'wf-influencia': buildWfInfluencia,
+  'wf-civ': buildWfCiv,
+  'wf-ficha': buildWfFicha,
+  'wf-codice': buildWfCodice,
+  'wf-mapa': buildWfMapa,
+  'wf-cronica': buildWfCronica,
+  'wf-assets': buildWfAssets,
+  'wf-meta': buildWfMeta,
+  glossario: buildGlossario,
+};
+
+function buildNav() {
+  const groups = {};
+  SECTIONS.forEach(s => { (groups[s.group] = groups[s.group] || []).push(s); });
+  const rail = document.getElementById('rail');
+  let h = `<h1>Gênese</h1><div class="sub">Documentação</div>`;
+  Object.keys(groups).forEach(g => {
+    h += `<span class="grp-label">${g}</span>`;
+    groups[g].forEach((s, i) => {
+      h += `<button class="nav-item" data-id="${s.id}">
+        <span class="dot" style="background:${s.dot}"></span>${s.title}
+        <span class="num">${String(SECTIONS.indexOf(s) + 1).padStart(2, '0')}</span>
+      </button>`;
+    });
+  });
+  rail.innerHTML = h;
+  rail.querySelectorAll('.nav-item').forEach(b => b.addEventListener('click', () => { location.hash = b.dataset.id; }));
+
+  const sel = document.getElementById('mobileSel');
+  sel.innerHTML = Object.keys(groups).map(g =>
+    `<optgroup label="${g}">` + groups[g].map(s => `<option value="${s.id}">${s.title}</option>`).join('') + `</optgroup>`
+  ).join('');
+  sel.addEventListener('change', () => { location.hash = sel.value; });
+}
+
+function render() {
+  const id = location.hash.replace('#', '') || SECTIONS[0].id;
+  const s = byId[id] || SECTIONS[0];
+  const fn = BUILDERS[s.id];
+  document.getElementById('stage').innerHTML = `<div class="sec">${fn ? fn() : '<p>Seção não encontrada.</p>'}</div>`;
+  window.scrollTo(0, 0);
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.id === s.id));
+  const sel = document.getElementById('mobileSel');
+  if (sel) sel.value = s.id;
+}
+
+buildNav();
+window.addEventListener('hashchange', render);
+render();
+</script>
+</body>
+</html>

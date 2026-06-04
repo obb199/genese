@@ -1,0 +1,27 @@
+# ---- .NET / C# ----
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# ---- Unity ----
+unity/Genese/Library/
+unity/Genese/Temp/
+unity/Genese/Logs/
+unity/Genese/obj/
+unity/Genese/UserSettings/
+unity/Genese/Builds/
+unity/Genese/*.csproj
+unity/Genese/*.sln
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- arquivos grandes de upload ----
+todos_arquivos_claude_design/uploads/
+
+# ---- imagens pesadas de referência ----
+imagens_de_referencia/
+todos_arquivos_claude_design/uploads/

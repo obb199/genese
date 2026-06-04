@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gênese — Termômetro 3D (Mundo Vivo)</title>
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <div id="app"></div>
+  <div id="loading">carregando o mundo 3D…</div>
+  <script>
+    /* captura de erro visível (útil ao abrir o arquivo direto) */
+    function showErr(m){ var l=document.getElementById('loading'); if(l){l.style.color='#ff8080';l.style.whiteSpace='pre';l.textContent='ERRO:\n'+m;} }
+    addEventListener('error',e=>showErr((e.message||e.error)+'\n'+(e.filename||'')+':'+(e.lineno||'')));
+  </script>
+
+  <!-- topo -->
+  <div class="top">
+    <span class="brand">✶</span>
+    <h1>Gênese</h1>
+    <span class="tag">termômetro 3D · mundo vivo</span>
+    <div class="spacer"></div>
+    <div class="ciclo">Ciclo <b id="cycle">0</b> · Pop. <b id="pop">10</b> · <span id="stageName">Bando</span></div>
+  </div>
+
+  <!-- painel lateral -->
+  <div class="hud">
+    <div class="card">
+      <h3>Atenção</h3>
+      <div class="at-wrap"><div class="atbar"><i id="atFill"></i></div><div class="atnum" id="atNum">62</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Influência (nudges)</h3>
+      <p class="lead">Escolha um nudge e clique no <b>chão</b>. A civilização interpreta.</p>
+      <div class="row">
+        <button class="b" id="bSinal">✶ Sinal</button>
+        <button class="b" id="bFaisca">✦ Faísca</button>
+        <button class="b" id="bInsp">☼ Inspiração</button>
+      </div>
+      <div class="hint" id="modeHint">Nenhum nudge ativo.</div>
+    </div>
+
+    <div class="card">
+      <h3>Mundo</h3>
+      <p class="lead">Bioma (pressão ambiental) e cultura da aldeia.</p>
+      <select class="sel" id="biomeSel"></select>
+      <select class="sel" id="cultSel"></select>
+      <div class="row" style="margin-top:9px">
+        <button class="b" id="bPlay">⏸ Pausar</button>
+        <button class="b" id="bDay">☀/☾ Ciclo dia</button>
+        <button class="b" id="bRand">⟳ Nova geração</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Leitura</h3>
+      <div class="legend">
+        <div><i style="background:#8C5BAA"></i> Luz roxa = presença do jogador</div>
+        <div><i style="background:#E0A24A"></i> Fogueira = pedra-coração da aldeia</div>
+        <div><i style="background:#2F6F62"></i> Verde = vida / vegetação</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-hint">arraste = girar câmera · roda = zoom</div>
+  <div class="note" id="foot">Termômetro de arte 3D (WebGL) · direção-alvo para reconstrução em Unity/C# — formas, paleta e iluminação que o jogo final deve ter</div>
+
+  <!-- Three.js (UMD, global THREE) -->
+  <script src="./vendor/three.min.js"></script>
+  <!-- Módulos do termômetro (ordem importa, como no projeto Claude Design) -->
+  <script src="./js/00-tokens.js"></script>
+  <script src="./js/10-creature.js"></script>
+  <script src="./js/20-world.js"></script>
+  <script src="./js/30-effects.js"></script>
+  <script src="./js/40-sim.js"></script>
+  <script src="./js/50-hud.js"></script>
+  <script src="./js/90-main.js"></script>
+</body>
+</html>

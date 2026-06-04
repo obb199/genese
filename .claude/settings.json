@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Bash(*)",
+      "Bash(sed -n '177,197p' biomes.js)",
+      "Bash(sed -n '120,137p' buildings.js)",
+      "Bash(sed -n '1,60p' buildings.js)",
+      "Bash(node -e ' *)",
+      "Read(//usr/bin/**)",
+      "Bash(node -e \"try{require.resolve\\('puppeteer'\\);console.log\\('puppeteer yes'\\)}catch\\(e\\){console.log\\('no puppeteer'\\)}\")",
+      "Bash(timeout 60 firefox --headless --window-size=1280,800 --screenshot /tmp/genese-demo.png file://__TRACKED_VAR__/mundo-vivo.html)",
+      "Read(//tmp/**)",
+      "Bash(perl -0777 -ne 'if\\(/<style>\\(.*?\\)<\\\\/style>/s\\){my $c=$1; my $o=\\($c=~tr/{//\\); my $cl=\\($c=~tr/}//\\); print \"open{=$o close}=$cl\\\\n\"; }' mundo-vivo.html)",
+      "Bash(awk '/<body>/,/<!-- ===== Assets/' mundo-vivo.html)",
+      "Bash(curl -sS -m 12 -o demo3d_three.tmp -w \"HTTP %{http_code} size=%{size_download}\\\\n\" https://unpkg.com/three@0.160.0/build/three.min.js)",
+      "Bash(curl -sS -m 25 -o demo3d/vendor/three.module.min.js -w \"three.module HTTP %{http_code} size=%{size_download}\\\\n\" https://unpkg.com/three@0.160.0/build/three.module.min.js)",
+      "Read(//home/user/**)",
+      "Read(//home/user/Unity/Hub/**)",
+      "Read(//home/user/.config/**)",
+      "Read(//home/user/.config/UnityHub/**)",
+      "Bash(dotnet --version)",
+      "Read(//opt/unityhub/**)",
+      "Bash(find / -maxdepth 7 -type d -iname \"*[0-9].[0-9]*f1*\" -path \"*Unity*\")",
+      "Bash(timeout 40 unityhub --headless editors --installed)",
+      "Bash(timeout 40 unityhub --no-sandbox --headless editors -i)",
+      "Bash(timeout 30 unityhub --headless help)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(sudo -n true)",
+      "Bash(curl -sS -m 30 https://public-cdn.cloud.unity3d.com/hub/prod/releases-linux.json -o /tmp/rel.json)",
+      "Bash(python3 *)",
+      "Bash(UNITY_HUB_CLI_NO_DEPRECATION_WARNING=1 timeout 60 xvfb-run -a unityhub --headless editors --installed)",
+      "Bash(UNITY_HUB_CLI_NO_DEPRECATION_WARNING=1 timeout 60 xvfb-run -a unityhub --headless editors --releases)",
+      "Bash(export UNITY_HUB_CLI_NO_DEPRECATION_WARNING=1)",
+      "Bash(nohup xvfb-run -a unityhub --headless install --version 6000.0.76f1 --changeset 6f7f9e1c9e8a --module linux-il2cpp --childModules)",
+      "Bash(echo \"PID=$!\")",
+      "Bash(sed -i 's/rig\\\\.transform\\\\.SetParent\\(rig\\\\.transform, false\\);/rig.transform.SetParent\\(root.transform, false\\);/' CreatureBuilder.cs)",
+      "Bash(sed -i 's/rig\\\\.transform\\\\.localScale = Vector3\\\\.one \\\\* g\\\\.size;/root.transform.localScale = Vector3.one * g.size;/' CreatureBuilder.cs)",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}

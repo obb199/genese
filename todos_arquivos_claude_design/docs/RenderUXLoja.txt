@@ -1,0 +1,63 @@
+E10
+Render 2D, UX e Integração de Loja
+Documento de Mecânica — Gênese
+Arte na tela, interface completa, áudio e Steamworks/Play
+Metadados e dependências
+Campo
+Valor
+Identificador
+E10
+Versão
+0.1
+Depende de
+E09; Design Visual
+Alimenta / é usada por
+E11
+Referência no GDD
+§8; §9
+Princípio de causalidade (vale para todo o documento): nenhum número aleatório é consultado sem que sua distribuição derive do estado do mundo. Não há &apos;evento aleatório&apos;, só &apos;resultado incerto de causas conhecidas&apos; (GDD §1.5). Toda subseção &apos;Causalidade&apos; abaixo declara de onde vêm as probabilidades.
+Índice
+1. Objetivo e pré-requisitos
+Transformar a simulação em jogo: render 2D estilizado das criaturas e do mundo (ligado ao genoma/cultura), interface completa (painéis do GDD §9.3), áudio generativo e integração das lojas (Steamworks no PC; serviços Play no Android). Pré-requisitos: E09 e o documento de Design Visual (DV). Referências: GDD §8, §9; DV; AA (Catálogo de Assets de Arte — a lista completa de assets a serem produzidos e integrados).
+2. Especificação detalhada
+2.1. Render 2D parametrizado
+As criaturas são desenhadas por um sistema modular cujos parâmetros vêm do genoma (cor, textura, forma, tamanho — GDD §8.3) e da cultura (ornamentos, pinturas). Mudança evolutiva ⇒ mudança visível. O ambiente e as construções refletem bioma e estágio sociopolítico/estilo artístico.
+2.2. UX e painéis
+Implementar as telas do GDD §9.3 (mundo vivo, painel da civilização, ficha de Figura, códice cultural/religioso, mapa+overlays, linha do tempo/Crônica) com a linguagem visual do DV. Leitura dupla: intuitiva sempre presente, precisa sob demanda.
+2.3. Áudio generativo
+Trilha em camadas que responde ao estado (instrumentação cresce com a complexidade cultural) e vocalizações procedurais que evoluem com a linguagem (E07). GDD §8.6.
+2.4. Integração de loja
+Plataforma
+Integração
+Steam (PC)
+Steamworks via GodotSteam/binding C#: conquistas, cloud saves, rich presence, overlay.
+Play (Android)
+Serviços relevantes (saves na nuvem, conquistas via Play Games se desejado), faturamento se houver compras.
+A integração é isolada atrás de uma interface IPlatformServices, com implementações por plataforma, para o núcleo nunca depender de uma loja específica.
+3. Trechos de código-chave
+3.1. Aparência derivada do genoma
+// Genese.Game: traduz genes (Core) em parâmetros visuais (Godot)void AplicarAparencia(Sprite2D s, in Genoma g, Cultura c) {    s.Modulate = CorDoGene(g);          // GDD §8.3    s.Scale    = Vector2.One * Tamanho(g);    AplicarOrnamentos(s, c);            // cultura}
+3.2. Abstração de serviços de loja
+public interface IPlatformServices {    void UnlockAchievement(string id);    void SaveToCloud(byte[] data); byte[] LoadFromCloud();}// SteamServices : IPlatformServices  /  PlayServices : IPlatformServices
+4. Plano de testes
+Evolução visível: uma população que muda geneticamente muda de aparência na tela.
+Legibilidade: playtests confirmam que o estado da civilização é &apos;lido&apos; sem abrir painéis.
+Loja: conquista desbloqueia e cloud save sincroniza na Steam; saves na nuvem no Android.
+Touch + mouse: UX funciona tanto em toque (Android) quanto em mouse/teclado (PC).
+5. Resultado esperado
+Um jogo jogável e bonito em PC e Android, com lojas integradas. Marco M-D atingido.
+Checklist de verificação
+Marque cada item ao confirmar que está implementado e funcionando. A mecânica só é considerada concluída quando todos os grupos passam. Itens de causalidade são bloqueadores: se algum falhar, há acaso arbitrário a eliminar (GDD §1.5).
+Implementação
+☐  Render 2D parametrizado por genoma+cultura; ambiente e construções estilizados (DV).
+☐  Todas as telas do GDD §9.3 implementadas com a identidade do DV.
+☐  Áudio generativo e vocalizações ligadas à linguagem.
+☐  IPlatformServices com implementações Steam e Play.
+Integração
+☐  Mudança evolutiva (E02/E06) reflete na aparência.
+☐  Overlays/gráficos/Crônica de E09 renderizados na UI.
+☐  Núcleo não depende de nenhuma loja específica (atrás da interface).
+UX
+☐  Funciona com toque e com mouse/teclado; legibilidade validada em playtest.
+Loja
+☐  Conquistas, cloud save e overlay funcionam na Steam; saves na nuvem no Android.

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gênese — Wireframes</title>
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#8C5BAA"/>
+    <circle cx="50" cy="50" r="20" fill="none" stroke="#F1ECE2" stroke-width="3"/>
+    <circle cx="50" cy="50" r="6" fill="#F1ECE2"/>
+    <line x1="50" y1="14" x2="50" y2="30" stroke="#F1ECE2" stroke-width="3"/>
+    <line x1="50" y1="70" x2="50" y2="86" stroke="#F1ECE2" stroke-width="3"/>
+    <line x1="14" y1="50" x2="30" y2="50" stroke="#F1ECE2" stroke-width="3"/>
+    <line x1="70" y1="50" x2="86" y2="50" stroke="#F1ECE2" stroke-width="3"/>
+  </svg>
+</template>
+<link rel="stylesheet" href="wf-kit.css">
+</head>
+<body>
+  <div class="topbar">
+    <span class="brand">Gênese</span>
+    <select id="mobileSel" aria-label="Selecionar folha"></select>
+  </div>
+  <div class="app">
+    <nav class="rail" id="rail"></nav>
+    <main class="stage" id="stage"></main>
+  </div>
+  <aside class="tweaks" id="tweaks"></aside>
+
+  <script src="wf-kit.js"></script>
+  <script src="sheets-ui.js"></script>
+  <script src="sheets-assets.js"></script>
+  <script src="sheets-meta.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

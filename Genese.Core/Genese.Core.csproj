@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- netstandard2.1 = compatível com Unity (núcleo puro, sem engine) -->
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Genese.Core</AssemblyName>
+    <RootNamespace>Genese.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

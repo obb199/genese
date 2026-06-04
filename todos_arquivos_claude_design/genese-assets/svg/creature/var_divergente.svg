@@ -1,0 +1,15 @@
+<svg viewBox="0 0 120 152" width="120" height="152" xmlns="http://www.w3.org/2000/svg" style="transform:scale(1);transform-origin:bottom center">
+      <defs><clipPath id="cr6"><ellipse cx="60" cy="78" rx="28" ry="48"></ellipse></clipPath></defs>
+      
+      <ellipse cx="60" cy="130" rx="22.400000000000002" ry="6" fill="#1F2933" opacity=".14"></ellipse>
+      <ellipse cx="47.4" cy="123" rx="7" ry="5" fill="#744232"></ellipse><ellipse cx="72.6" cy="123" rx="7" ry="5" fill="#744232"></ellipse><path d="M34 82.8 q-9 2 -10 9" stroke="#744232" stroke-width="6" fill="none" stroke-linecap="round"></path><path d="M86 82.8 q9 2 10 9" stroke="#744232" stroke-width="6" fill="none" stroke-linecap="round"></path>
+      <g transform="rotate(0 60 78) translate(0 0) scale(1 1)" transform-origin="60px 78px">
+        
+        <ellipse cx="60" cy="78" rx="28" ry="48" fill="#B0644C" stroke="#583226" stroke-width="2"></ellipse>
+        <g clip-path="url(#cr6)"><circle cx="48.8" cy="73.2" r="4.48" fill="#744232"></circle><circle cx="69.8" cy="85.2" r="4.48" fill="#744232"></circle><circle cx="57.2" cy="99.6" r="4.48" fill="#744232"></circle><circle cx="64.2" cy="61.2" r="4.48" fill="#744232"></circle><circle cx="50.2" cy="97.2" r="4.48" fill="#744232"></circle>
+          <ellipse cx="50.2" cy="56.4" rx="8.4" ry="10.56" fill="#ce9f90" opacity=".5"></ellipse>
+        </g>
+        <circle cx="48.8" cy="62.64" r="4.2" fill="#fbf9f3"></circle><circle cx="49.43" cy="63.144" r="2.1" fill="#23202b"></circle><circle cx="47.959999999999994" cy="61.59" r="0.756" fill="#fff"></circle><circle cx="71.2" cy="62.64" r="4.2" fill="#fbf9f3"></circle><circle cx="71.83" cy="63.144" r="2.1" fill="#23202b"></circle><circle cx="70.36" cy="61.59" r="0.756" fill="#fff"></circle><circle cx="60" cy="51.64" r="4.2" fill="#fbf9f3"></circle><circle cx="60.63" cy="52.144" r="2.1" fill="#23202b"></circle><circle cx="59.16" cy="50.59" r="0.756" fill="#fff"></circle>
+        <path d="M55 75.6 Q60 79.6 65 75.6" stroke="#583226" stroke-width="1.8" fill="none" stroke-linecap="round"></path>
+        
+      </g></svg>

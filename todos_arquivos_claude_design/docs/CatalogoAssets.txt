@@ -1,0 +1,459 @@
+AA
+Catálogo de Assets de Arte
+Documento de Mecânica — Gênese
+Lista mestra de tudo que precisa ser desenhado, com checklist e prioridades
+Metadados e dependências
+Campo
+Valor
+Identificador
+AA
+Versão
+0.1
+Depende de
+DV — Design Visual; GDD §8/§9; M01–M14
+Alimenta / é usada por
+E10 (render); E11/E12 (loja); Produção de arte / Claude Design
+Referência no GDD
+§8; §9
+Princípio de causalidade (vale para todo o documento): nenhum número aleatório é consultado sem que sua distribuição derive do estado do mundo. Não há &apos;evento aleatório&apos;, só &apos;resultado incerto de causas conhecidas&apos; (GDD §1.5). Toda subseção &apos;Causalidade&apos; abaixo declara de onde vêm as probabilidades.
+Índice
+1. Propósito e como usar
+Este documento (AA) é o catálogo de produção de arte de Gênese: a lista completa de tudo que precisa ser desenhado/animado, organizada por categoria, com prioridade, e com um checklist marcável ao fim de cada bloco. Ele foi pensado para ser entregue a quem for produzir o design final (incluindo o Claude Design), junto das suas referências.
+Fluxo de uso: (1) você reúne as referências por categoria no documento de Design Visual (DV), nos espaços tracejados; (2) usa este AA como a lista mestra do que pedir; (3) marca cada item à medida que for concluído. O DV define o ESTILO; este AA define a QUANTIDADE e a LISTA.
+Referências cruzadas: a coluna &apos;Origem&apos; de cada tabela aponta para o documento que justifica aquele asset (GDD = visão; M- = mecânica; E- = etapa de construção; DV = direção de arte). Assim ninguém produz arte sem saber para que sistema ela serve.
+1.1. Legenda de prioridade
+Prioridade
+Significado
+P0 — Vertical slice
+Necessário para o protótipo que prova a emergência (marco M-B do roadmap).
+P1 — Jogo jogável
+Necessário para o loop completo e bonito (marco M-D).
+P2 — Polimento/loja
+Necessário para lançamento e material de loja (marcos M-E/M-F).
+Nota técnica recorrente: a arte de criaturas e construções deve ser PARAMÉTRICA/MODULAR (montável por genoma e cultura — ver E10/DV §4), não sprites fechados. Onde isso se aplica, está indicado como &apos;modular&apos;.
+2. Criaturas (núcleo visual)
+O sistema mais importante e mais modular. Tudo aqui se compõe a partir de uma &apos;forma-mãe&apos; parametrizada por genoma (cor, textura, forma, tamanho) e cultura (ornamentos). Ver DV §4, GDD §8.3, M01/M02.
+2.1. Base e partes modulares
+Asset
+Descrição
+Prioridade
+Origem
+Forma-mãe
+Corpo base estilizado de onde tudo deriva
+P0
+DV §4.1
+Variações de silhueta (5+)
+Conjuntos de forma corporal para divergência/especiação
+P0
+M03, DV §4.1
+Camadas de textura
+Pelo, escama, pele lisa, casca (sobrepostas à forma)
+P1
+M01, DV §4.2
+Apêndices modulares
+Membros, antenas, caudas, asas — encaixáveis
+P1
+M01
+Olhos/sentidos
+Variações ligadas ao gene de percepção
+P1
+M01
+Rampas de cor do corpo
+Gradientes paramétricos por genética+ambiente
+P0
+DV §3.2, §4.2
+2.2. Estados de animação (por criatura modular)
+Animação
+Quando ocorre
+Prioridade
+Origem
+Ocioso (idle)
+Parado, respirando
+P0
+DV §4.4
+Locomoção
+Andar/correr
+P0
+M04
+Forragear/coletar
+Pegar recurso
+P0
+M07
+Alerta/fugir
+Detecção de ameaça e fuga
+P0
+M04
+Cortejo
+Seleção de parceiro
+P1
+M02, M03
+Conflito/ataque
+Disputa, combate
+P1
+M05, M11
+Cuidado parental
+Investimento na prole
+P1
+M02
+Trabalho/construção
+Erguer/manter estruturas
+P1
+M05
+Morte
+Fim do indivíduo
+P1
+M14
+Cor de sinal/postura emocional
+Comunicação não-verbal
+P0
+M08, GDD §3.5
+2.3. Ornamentos culturais (camada de cultura)
+Asset
+Descrição
+Prioridade
+Origem
+Pinturas corporais
+Marcas que indicam identidade tribal/papel
+P1
+M09, DV §4.2
+Adornos de papel social
+Distinguir líder, curandeiro, artesão, Figura
+P1
+M05, M09
+Marcas religiosas
+Símbolos de fé sobre o corpo
+P2
+M10
+Checklist — Criaturas
+☐  Forma-mãe aprovada e funcional no sistema paramétrico.
+☐  Pelo menos 5 variações de silhueta para especiação.
+☐  Camadas de textura (pelo/escama/pele/casca) montáveis.
+☐  Apêndices, olhos e rampas de cor modulares prontos.
+☐  Todas as animações P0 (idle, locomoção, forragear, alerta, sinal/postura) entregues.
+☐  Animações P1 (cortejo, conflito, parental, trabalho, morte) entregues.
+☐  Ornamentos culturais (pinturas, adornos de papel, marcas religiosas) montáveis.
+3. Ambiente e biomas
+O mundo é uma tela viva que muda com clima, estação e a marca da civilização. Ver DV §5, GDD §8.4, M06.
+3.1. Biomas (tiles/terreno)
+Asset
+Descrição
+Prioridade
+Origem
+Tileset de pradaria/savana
+Terreno-base inicial
+P0
+M06
+Tileset de floresta
+Mata densa
+P1
+M06
+Tileset de deserto
+Árido
+P1
+M06
+Tileset de tundra/gelo
+Frio
+P1
+M06
+Tileset de montanha/rocha
+Relevo e barreiras
+P1
+M06
+Tileset de água (rio/lago/mar)
+Corpos d&apos;água
+P0
+M06
+Tileset de pântano/úmido
+Transição
+P2
+M06
+Variações sazonais de cada bioma
+Mesma região em estações diferentes
+P1
+M06, DV §5
+3.2. Elementos naturais e fenômenos
+Asset
+Descrição
+Prioridade
+Origem
+Vegetação (recursos de comida)
+Plantas, frutos, árvores colhíveis
+P0
+M07
+Fontes de água/material
+Nascentes, jazidas, pedras
+P0
+M07
+Predadores/perigos ambientais
+Ameaças não-jogáveis
+P1
+M04, M06
+Efeitos: seca, cheia, neve
+Estados visuais do clima
+P1
+M06
+Efeitos: vulcão, terremoto
+Catástrofes geológicas
+P2
+M06
+Cicatrizes ambientais
+Desmatamento, poluição, campo de batalha
+P2
+DV §5, GDD §8.4
+Checklist — Ambiente
+☐  Tilesets P0 (pradaria, água) prontos.
+☐  Tilesets P1 (floresta, deserto, tundra, montanha) prontos.
+☐  Variações sazonais de cada bioma.
+☐  Vegetação e fontes de recurso colhíveis.
+☐  Predadores/perigos ambientais.
+☐  Efeitos climáticos (seca, cheia, neve) e catástrofes (vulcão, terremoto).
+☐  Cicatrizes ambientais persistentes.
+4. Construções e território
+Refletem o estágio sociopolítico e o estilo artístico da cultura — duas civilizações constroem visivelmente diferente. Modular por estágio + estilo cultural. Ver DV §5, GDD §3.9, M05.
+Asset
+Descrição
+Prioridade
+Origem
+Abrigo de bando
+Estrutura primitiva inicial
+P0
+M05
+Assentamento tribal
+Tendas/cabanas, fogueira, totens
+P1
+M05, M09
+Aldeia/cidade
+Casas, armazéns, praça
+P1
+M05, M07
+Estruturas de estado
+Muralhas, grandes obras, monumentos
+P2
+M05
+Templos/estruturas religiosas
+Por estágio de religião
+P2
+M10
+Mercado
+Onde a economia se materializa
+P1
+M07
+Marcadores de território
+Fronteiras, totens, estradas, campos cultivados
+P1
+DV §5, M11
+Variações por estilo cultural
+Mesma função, estética distinta por civilização
+P2
+M09, DV §5
+Checklist — Construções
+☐  Abrigo de bando (P0) pronto.
+☐  Progressão tribal → aldeia/cidade → estado.
+☐  Templos por estágio religioso.
+☐  Mercado e marcadores de território.
+☐  Variações de estilo construtivo por cultura.
+5. Interface (UI) e ícones
+Traduz centenas de estatísticas em sensação, com leitura dupla (intuitiva + precisa). Ver DV §6, GDD §9, M13.
+5.1. Telas e painéis (GDD §9.3)
+Asset
+Descrição
+Prioridade
+Origem
+HUD do mundo vivo
+Moldura, controles de tempo, recurso Atenção
+P0
+M12, M13
+Painel da civilização
+Macro-estatísticas, tendências, eventos
+P1
+M13, GDD §4.3
+Ficha de indivíduo/Figura
+Genoma, traços, relações, história
+P1
+M05, GDD §4.1
+Códice cultural/religioso
+Crenças, tabus, mitos, idioma
+P1
+M09, M10
+Mapa + seletor de overlays
+Visão ampla com camadas de dados
+P1
+M13
+Linha do tempo / Crônica
+História narrada da partida
+P1
+M13, GDD §9.4
+Tela de influência
+Seleção das alavancas e nudges
+P0
+M12
+5.2. Ícones e elementos repetidos
+Asset
+Descrição
+Prioridade
+Origem
+Ícones de estatística
+Um por macro-estatística (agressividade, fé, etc.)
+P1
+GDD §4.3
+Ícones de recurso
+Comida, água, material, luxo
+P0
+M07
+Ícones de nudge
+Sinal, Proteção, Faísca, Semente, Inspiração
+P0
+M12
+Ícones de evento/emoção coletiva
+Alertas, marcos, crises
+P1
+M14, DV §6.2
+Rampas de cor de overlay
+Heatmaps por estatística (paletas semânticas)
+P0
+DV §3.2, M13
+Cursores/indicadores de foco
+Marcar onde o jogador observa/age
+P0
+M12
+Checklist — UI
+☐  HUD do mundo vivo e tela de influência (P0) prontos.
+☐  Todos os painéis do GDD §9.3 desenhados.
+☐  Ícones de recurso e de nudge (P0).
+☐  Ícones de todas as macro-estatísticas e de eventos/emoções.
+☐  Rampas de cor de overlay coerentes com as paletas semânticas.
+☐  Cursores e indicadores de foco.
+6. Escrita procedural e símbolos
+Cada civilização inventa um sistema de escrita visual próprio, que aparece em construções, artefatos e na Crônica — ilegível no início, &apos;traduzível&apos; depois. Ver DV §6.3, M08.
+Asset
+Descrição
+Prioridade
+Origem
+Conjunto de glifos-base
+Inventário de formas para compor escritas
+P2
+M08
+Regras visuais de composição
+Como glifos se combinam por cultura
+P2
+M08, DV §6.3
+Artefatos com escrita
+Tábuas, pinturas rupestres, estandartes
+P2
+M08, M09
+Checklist — Escrita
+☐  Conjunto de glifos-base para geração procedural.
+☐  Regras visuais de composição por civilização.
+☐  Artefatos que exibem a escrita no mundo.
+7. Artefatos de compartilhamento
+Peças com identidade visual própria, pensadas para serem compartilhadas fora do jogo. Ver DV §7, M13.
+Asset
+Descrição
+Prioridade
+Origem
+Moldura do GIF de evolução
+Identidade visual do lapso temporal exportado
+P2
+M13, DV §7
+Layout da Crônica
+Tipografia e moldura da história narrada
+P2
+M13, GDD §9.4
+Cartão de &apos;destino final&apos;
+Tela-resumo do final alcançado pela civilização
+P2
+M14
+Checklist — Artefatos compartilháveis
+☐  Moldura/identidade do GIF de evolução.
+☐  Layout da Crônica.
+☐  Cartão de destino final.
+8. Marca, loja e marketing
+Necessário para publicar na Play Store e na Steam (etapas E11/E12). Requisitos exatos de tamanho/formato devem ser conferidos na documentação vigente de cada loja antes da entrega.
+Asset
+Descrição
+Prioridade
+Origem
+Logotipo do jogo
+Marca principal e variações
+P1
+E10
+Ícone do app
+Ícone adaptável (Android) e da Steam
+P2
+E11/E12
+Capsules da Steam
+Imagens da página da loja (vários tamanhos)
+P2
+E12
+Capturas de tela
+Screenshots de divulgação por plataforma
+P2
+E12
+Banner/feature graphic (Play)
+Arte de destaque da ficha Android
+P2
+E12
+Trailer/vídeo
+Material em vídeo para as lojas
+P2
+E12
+Tela de carregamento/abertura
+Splash e menu principal
+P1
+E10
+Checklist — Marca e loja
+☐  Logotipo e variações.
+☐  Ícone do app (adaptável Android + Steam).
+☐  Capsules da Steam em todos os tamanhos exigidos.
+☐  Capturas de tela por plataforma.
+☐  Banner/feature graphic da Play.
+☐  Trailer/vídeo.
+☐  Splash e menu principal.
+☐  Tamanhos/formatos conferidos na documentação atual das lojas.
+9. Áudio (lista de referência)
+Não é arte visual, mas integra a identidade sensorial e costuma ser planejado junto. Detalhe no GDD §8.6 e DV §8. Incluído aqui para não ficar esquecido na produção.
+Asset
+Descrição
+Prioridade
+Origem
+Camadas da trilha generativa
+Faixas que crescem com a complexidade cultural
+P1
+GDD §8.6
+Bancos de vocalização procedural
+Fonemas/sons que evoluem com a linguagem
+P1
+M08
+SFX de ações
+Forragear, construir, conflito, eventos
+P1
+E10
+SFX de UI
+Cliques, intervenções, alertas
+P1
+E10
+Checklist — Áudio
+☐  Camadas da trilha generativa.
+☐  Bancos de vocalização procedural.
+☐  SFX de ações e de UI.
+10. Resumo de produção por prioridade
+Ordem sugerida de produção, alinhada aos marcos do roadmap. Produza P0 antes de tudo: é o que prova o jogo.
+Prioridade
+Foco
+Entrega-alvo
+P0
+Forma-mãe + animações essenciais, tiles de pradaria e água, vegetação/recursos, HUD e tela de influência, ícones de recurso/nudge, rampas de overlay
+Vertical slice jogável (marco M-B)
+P1
+Demais biomas e sazonais, progressão de construções, painéis completos, ícones de estatística, logotipo, menu, áudio base
+Jogo jogável e bonito (marco M-D)
+P2
+Escrita procedural, artefatos compartilháveis, templos, catástrofes, todo material de loja
+Lançamento (marcos M-E/M-F)
+11. Como referenciar com o resto do projeto
+Este AA conversa com os demais documentos assim:
+DV (Design Visual): define o ESTILO de tudo que está listado aqui. Cole suas referências no DV; produza pela lista do AA.
+GDD: a visão (§8 visual, §9 UI) que justifica as categorias.
+Documentos M- (mecânicas): dizem para que sistema cada asset serve (coluna &apos;Origem&apos;).
+Documentos E- (etapas): E10 implementa o render desses assets; E11/E12 cobrem os assets de loja.
+Sugestão prática para o pedido ao Claude Design: entregue, por categoria, (a) a referência reunida no DV, (b) a linha correspondente deste AA, e (c) a nota &apos;modular&apos; quando aplicável. Isso dá estilo + lista + restrição técnica num pacote só, sem ambiguidade.
