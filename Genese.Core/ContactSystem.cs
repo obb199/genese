@@ -11,7 +11,7 @@ namespace Genese.Core
     /// </summary>
     public static class ContactSystem
     {
-        public const float ContactRadius = 5f;
+        public const float ContactRadius = 10f;
 
         /// <summary>
         /// Verifica pares de criaturas próximas entre duas civs e executa a interação causal.
@@ -140,7 +140,7 @@ namespace Genese.Core
             {
                 var dom = a.Pop.Culture.Dominant();
                 if (dom.HasValue)
-                    b.Pop.Culture.SpawnMeme(dom.Value.Type, dom.Value.Force * 0.65f, dom.Value.OriginId, rng);
+                    b.Pop.Culture.SpawnSymbol(dom.Value.Type, dom.Value.Force * 0.65f, dom.Value.OriginId, rng);
             }
             rel.Trust = Math.Min(1f, rel.Trust + 0.007f);
         }
@@ -185,7 +185,7 @@ namespace Genese.Core
             foreach (var c in pop.Creatures)
             {
                 if (!c.Alive) continue;
-                int x = Math.Clamp((int)c.X, 0, env.W-1), y = Math.Clamp((int)c.Y, 0, env.H-1);
+                int x = Cl((int)c.X, 0, env.W-1), y = Cl((int)c.Y, 0, env.H-1);
                 sum += env.Comida[env.Idx(x, y)]; n++;
             }
             return n == 0 ? 0f : 1f - sum / n;
@@ -193,5 +193,7 @@ namespace Genese.Core
 
         static float ComplementaryNeeds(Population a, Population b, Environment env)
             => Math.Abs(ResourceScarcity(a, env) - ResourceScarcity(b, env));
+
+        static int Cl(int v, int lo, int hi) => v < lo ? lo : (v > hi ? hi : v);
     }
 }

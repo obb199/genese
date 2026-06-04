@@ -187,7 +187,7 @@ if (sim.Pop.Language.Lexicon.Count > 0)
     foreach (var kv in sim.Pop.Language.Lexicon) { Console.Write($"{kv.Key}='{kv.Value}'  "); if (++shown >= 8) break; }
     Console.WriteLine();
 }
-Console.WriteLine($"Cultura: memes={sim.Pop.Culture.MemeCount}  ·  coesão={sim.Pop.Culture.CulturalCohesion:0.00}");
+Console.WriteLine($"Cultura: memes={sim.Pop.Culture.SymbolCount}  ·  coesão={sim.Pop.Culture.CulturalCohesion:0.00}");
 foreach (var kv in sim.Pop.Culture.Pool)
     Console.WriteLine($"  [{kv.Value.Type}] força={kv.Value.Force:0.00}  prevalência={kv.Value.Prevalence:0.00}  rigidez={kv.Value.Rigidity:0.00}  origem=#{kv.Value.OriginId}");
 if (sim.Pop.Culture.Pool.Count == 0) Console.WriteLine("  (nenhum meme activo — figuras ainda não emergiram ou pool vazio)");
@@ -202,7 +202,7 @@ for (int ci = 0; ci < sim.Civs.Count; ci++)
 {
     var civ = sim.Civs[ci];
     Console.WriteLine($"  Civ {ci}: pop={civ.Pop.Count} · língua={civ.Pop.Language.Stage} · " +
-                      $"religião={civ.Pop.Belief.Stage} · memes={civ.Pop.Culture.MemeCount}");
+                      $"religião={civ.Pop.Belief.Stage} · memes={civ.Pop.Culture.SymbolCount}");
     if (civ.Relations.Count > 0)
     {
         foreach (var kv in civ.Relations)
@@ -225,9 +225,31 @@ if (sim.Events.Active.Count > 0)
 }
 Console.WriteLine("(civilizações correm as mesmas regras M01-M10 — sem IA roteirizada; interação por estado)");
 
+// ---------------------------------------------------------------------------
+Title("13) E09 — Influência (M12), Observação/Crônica (M13), PopStats (M02), Destinos (M14)");
+// PopStats M02
+Genese.Core.PopStats.Compute(sim.Pop.Creatures, out float[] means, out float[] stds);
+Console.WriteLine($"Macro-estatísticas coletivas (civ 0):");
+Console.WriteLine($"  militarismo   {Bar(Genese.Core.PopStats.Militarismo(means))}");
+Console.WriteLine($"  coesão social {Bar(Genese.Core.PopStats.CoesaoSocial(means))}");
+Console.WriteLine($"  inovação      {Bar(Genese.Core.PopStats.Inovacao(means))}");
+Console.WriteLine($"  alerta homogeneidade: {(Genese.Core.PopStats.HomogeneityAlert(stds) ? "⚠ SIM" : "não")}");
+// InfluenceSystem M12
+var infl = sim.Influence;
+Console.WriteLine($"Atenção: {infl.Attention:0}/{infl.MaxAttention(sim.Pop.Belief.Fervor):0}  total nudges: {infl.TotalNudges}");
+Console.WriteLine($"Custos por nudge: Sinal={Genese.Core.InfluenceSystem.Cost[0]} Faísca={Genese.Core.InfluenceSystem.Cost[1]} Inspiração={Genese.Core.InfluenceSystem.Cost[2]} Proteção={Genese.Core.InfluenceSystem.Cost[3]} Pressão={Genese.Core.InfluenceSystem.Cost[4]}");
+// Crônica M13
+Console.WriteLine($"Crônica: {sim.Chronicle.Count} entradas");
+foreach (var e in sim.Chronicle.Entries.GetRange(0, System.Math.Min(4, sim.Chronicle.Count)))
+    Console.WriteLine($"  {e.Text}");
+if (sim.Chronicle.Count > 4) Console.WriteLine($"  … + {sim.Chronicle.Count - 4} mais");
+// Destino M14
+Console.WriteLine($"Destino atual: {sim.Destiny}");
+Console.WriteLine("(destinos: Continuidade, Transcendência, Extinção, Fusão, Prosperidade, Estagnação, Divergência)");
+
 Console.WriteLine();
 Console.WriteLine("Fim. Edite os parâmetros (seed/gerações/pressão) e rode de novo para comparar.");
-Console.WriteLine("Onde mexer: ContactSystem/EventSystem (inter-civ) · Language/Culture/Belief (simbólico) · Environment (mundo).");
+Console.WriteLine("Onde mexer: InfluenceSystem/Chronicle (M12/M13) · PopStats (M02) · EventSystem (M14).");
 
 // ============================ helpers ============================
 static void Title(string t)

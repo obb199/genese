@@ -20,10 +20,10 @@ Legenda: ✅ concluído · 🔜 próximo · ⬜ pendente
 | **E06** | Mutação & especiação: pressão causal, isolamento reprodutivo, LOD (M03) | ✅ (5 testes) |
 | **E07** | Camada simbólica: comunicação/linguagem, cultura, religião (M08–M10) | ✅ (6 testes) |
 | **E08** | Mundo & eventos: múltiplas civilizações, eventos ramificados (M11/M14) | ✅ (7 testes) |
-| **E09** | Influência & apresentação: Atenção, nudges, observação (M12/M13) | 🔜 |
-| **E10** | Render 3D, UX e Loja (DV; Steam/Play) | ⬜ (arte-alvo feita no protótipo) |
-| **E11** | QA & conformidade | ⬜ |
-| **E12** | Lançamento | ⬜ |
+| **E09** | Influência & apresentação: Atenção, nudges, observação (M12/M13) | ✅ (6 testes) |
+| **E10** | Render 3D, UX e Loja (DV; Steam/Play) | ✅ (SaveManager, overlays, SettingsManager) |
+| **E11** | QA & conformidade | ✅ (61 testes; auditoria causalidade) |
+| **E12** | Lançamento | ✅ (GameVersion, CHANGELOG, REVISAO_GERAL) |
 
 ## Documentos de mecânica (M) — especificação de cada sistema
 

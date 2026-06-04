@@ -25,7 +25,7 @@ namespace Genese.Nucleo
                 color2 = Color.HSVToRGB(Mathf.Repeat(hue + 0.08f, 1f), 0.5f, 0.7f),
                 blend = Get("corpo.cor") > 0.5f ? "belly" : "none",
                 pattern = Pick(new[] { "none", "belly", "spots", "stripes" }, Get("resistencia.doenca")),
-                size = 0.82f + Get("corpo.tamanho") * 0.55f,
+                size = 1.55f + Get("corpo.tamanho") * 0.90f,
                 eyes = Pick(new[] { "two", "two", "big", "small" }, Get("sentidos.percepcao")),
                 pupil = Get("comp.agressividade") > 0.6f ? "vertical" : "round",
                 mouth = Get("comp.agressividade") > 0.72f ? "tusks" : "simple",

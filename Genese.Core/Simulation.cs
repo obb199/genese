@@ -14,7 +14,7 @@ namespace Genese.Core
     /// </summary>
     public sealed class Simulation : ISimulation
     {
-        public const uint SnapshotVersion = 7; // E08: Civilization list + EventSystem
+        public const uint SnapshotVersion = 8; // E09: InfluenceSystem + Chronicle + PopStats
 
         private WorldState _state;
         private Rng _root;
@@ -26,11 +26,16 @@ namespace Genese.Core
         private readonly List<Rng> _civMut = new();
 
         public Environment   Env    { get; private set; }
-        public List<Civilization> Civs { get; private set; } = new();
-        public EventSystem   Events { get; private set; } = new();
+        public List<Civilization> Civs      { get; private set; } = new();
+        public EventSystem        Events    { get; private set; } = new();
+        public InfluenceSystem    Influence { get; private set; } = new();
+        public Chronicle          Chronicle { get; private set; } = new();
 
         /// <summary>Backward-compat: civilização do jogador (Civs[0].Pop).</summary>
         public Population Pop => Civs.Count > 0 ? Civs[0].Pop : null;
+
+        /// <summary>Destino atual da simulação (M14 §5), avaliado em cada Step.</summary>
+        public DestinyType Destiny { get; private set; } = DestinyType.Continuidade;
 
         public ulong     Tick  => _state.Tick;
         public WorldState State => _state;
@@ -53,8 +58,11 @@ namespace Genese.Core
 
             _contact = _root.Fork(Streams.Contact);
             _evRng   = _root.Fork(Streams.Events);
+            Influence.Init(width, height);
 
-            int perCiv = Math.Max(4, initialCreatures / Math.Max(1, numCivs));
+            // Se initialCreatures == 0, respeita o pedido (testes de ambiente sem população)
+            int perCiv = initialCreatures == 0 ? 0
+                       : Math.Max(4, initialCreatures / Math.Max(1, numCivs));
             for (int c = 0; c < numCivs; c++)
             {
                 // Streams da civ c: offsets de 0x100*c para isolamento total
@@ -93,16 +101,23 @@ namespace Genese.Core
 
             if (LOD != SimLOD.Agregado || _state.Tick % 5 == 0)
             {
-                // Contato inter-civ (a cada 10 ticks)
-                if (_state.Tick % 10 == 0 && Civs.Count > 1)
+                // Contato inter-civ (a cada 4 ticks — mais frequente)
+                if (_state.Tick % 4 == 0 && Civs.Count > 1)
                     for (int i = 0; i < Civs.Count; i++)
                         for (int j = i+1; j < Civs.Count; j++)
                             ContactSystem.CheckAndInteract(Civs[i], Civs[j], Env, _state.Tick, _contact);
 
-                // Eventos causais (a cada 30 ticks)
-                if (_state.Tick % 30 == 0)
+                // Eventos causais + Crônica + Destino (a cada 20 ticks)
+                if (_state.Tick % 20 == 0)
+                {
                     Events.Step(Civs, Env, _state.Tick, _evRng);
+                    Chronicle.Sync(Events.Log, Civs);
+                    Destiny = EventSystem.EvaluateDestiny(Civs, Env);
+                }
             }
+
+            // Influência: regeneração de Atenção por tick (fervor da civ do jogador)
+            Influence.Step(Pop != null ? Pop.Belief.Fervor : 0f);
 
             _state.Tick++;
         }
@@ -124,6 +139,9 @@ namespace Genese.Core
                 Civs[i].Write(w);
             }
             Events.Write(w);
+            Influence.Write(w);
+            Chronicle.Write(w);
+            w.Write((byte)Destiny);
             return ms.ToArray();
         }
 
@@ -148,6 +166,9 @@ namespace Genese.Core
                 Civs.Add(Civilization.Read(r));
             }
             Events = new EventSystem(); Events.ReadInto(r);
+            Influence = new InfluenceSystem(); Influence.ReadInto(r);
+            Chronicle = new Chronicle(); Chronicle.ReadInto(r);
+            Destiny = (DestinyType)r.ReadByte();
         }
     }
 }

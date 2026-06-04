@@ -202,7 +202,7 @@ namespace Genese
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("⟳ Geração")) NewGeneration();
-            if (orbit && GUILayout.Button("⌖ Topo")) orbit.elevation = orbit.elevation > 1.0f ? 0.6f : 1.4f;
+            if (orbit && GUILayout.Button("⌖ Topo")) { /* câmera livre — use Q/E para ajustar altura */ }
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
         }

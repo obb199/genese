@@ -260,9 +260,43 @@ Implementa M11/M14 no `Genese.Core` — múltiplas civilizações com identidade
 - **CoreHud**: painel esquerdo com lista de civs, relações (stance/trust/resentimento), eventos
   activos e últimos 3 eventos resolvidos (Crônica).
 
-## ▶️ Próxima etapa — E09: Influência & Apresentação (M12/M13)
+## ✅ E09 — Influência & Observação (CONCLUÍDA — 6 testes; 54/54 no total)
 
-Atenção aprofundada, nudges com consequências culturais/religiosas, Crônica visual, observação.
+Revisão geral do projeto + implementa M12/M13 + fecha gaps de M02/M04/M14:
+
+**Revisão e gaps fechados:**
+- **M02 (Traços)**: `PopStats.cs` — médias e desvio-padrão de cada gene sobre a população viva,
+  função pura do estado (nunca altera simulação); alerta de homogeneidade; macro-estatísticas
+  `Militarismo`, `CoesaoSocial`, `Inovação` derivadas das médias coletivas (GDD §4.3).
+  `comp.nomadismo`, `comp.medoCoragem`, `comp.vigilancia`, `comp.armazenamento` e `comp.invParental`
+  integrados em `Population.Act` (utilidades de explorar/descansar/reproduzir afetadas).
+- **M14 (Destinos)**: `EventSystem.EvaluateDestiny` — 7 destinos emergentes (Continuidade,
+  Transcendência, Extinção, Fusão, Prosperidade, Estagnação, Divergência), avaliados por limiares
+  de estado acumulado; `Simulation.Destiny` exposto e serializado.
+
+**E09 core novo:**
+- **`PopStats.cs`** (M02): estatísticas coletivas on-demand, alerta de homogeneidade.
+- **`InfluenceSystem.cs`** (M12): Atenção formal em Core — regenera por `0.015 + fervor×0.008`
+  por tick; `MaxAttention = 100 + fervor×30`; custo por tipo (Sinal 18, Faísca 20, Inspiração 18,
+  Proteção 25, Pressão 30); **Alavanca 3** (`AddFocus`): foco acumula por célula, decai a 0.985/tick,
+  retorna `FocusMultiplier = 1 + foco×0.03`; `ApplyProtection` blinda criatura por N ticks.
+- **`Chronicle.cs`** (M13): Crônica narrativa — usa nomes do léxico emergente (`PeopleNameOf`),
+  narra só eventos do `EventSystem.Log` (nunca fabrica), organiza por era, resume partidas longas.
+- **`SnapshotVersion = 8`**: InfluenceSystem + Chronicle + Destiny serializados.
+- **+6 testes → 54/54 verdes** (`InfluenceTests.cs`): PopStats, regeneração de Atenção, fervor
+  amplifica teto, foco acumula/multiplica, Crônica apenas de eventos reais, destino válido, snapshot.
+- **Bug fix**: `initialCreatures=0` criava 4 criaturas por civ (Math.Max) — corrigido.
+
+**Unity (E09):**
+- `CoreHud`: Atenção integrada ao `InfluenceSystem`; 5 nudges (+ Proteção + Pressão); overlay
+  selector (Bioma/Comida/Água/Temperatura/Densidade/Grupos); foco registado ao clicar no terreno;
+  painel Crônica (últimas 8 entradas, lado inferior-esquerdo); PopStats (militarismo/coesão/inovação)
+  + alerta de homogeneidade na inspeção de célula; destino atual na barra de status.
+- **Lab** ganhou **seção 13** (PopStats, InfluenceSystem, Crônica, Destino).
+
+## ▶️ Próxima etapa — E10: Render 3D, UX e Loja
+
+Arte final, UI uGUI, Steam/Google Play, build settings.
 Roadmap em [ROADMAP.md](ROADMAP.md).
 
 ---

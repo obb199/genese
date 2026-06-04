@@ -4,41 +4,41 @@ using System.IO;
 
 namespace Genese.Core
 {
-    public enum MemeType : byte { Valor, Tabu, Mito, Arte, Rito }
+    public enum SymbolType : byte { Valor, Tabu, Mito, Arte, Rito }
 
     /// <summary>
-    /// Cultura emergente (M09). Memes — unidades de informação cultural — nascem de Figuras
+    /// Cultura emergente (M09). Símbolos — unidades de informação cultural — nascem de Figuras
     /// ou eventos, propagam-se por imitação proporcional ao prestígio e competem pela atenção
     /// coletiva. A lente cultural converte eventos em significado pelo argmax de força ×
     /// prevalência — nunca por sorteio arbitrário (GDD §1.5).
     /// </summary>
     public sealed class Culture
     {
-        public struct Meme
+        public struct Symbol
         {
-            public int      Id;
-            public MemeType Type;
-            public float    Force;       // intensidade intrínseca do meme
-            public float    Rigidity;    // resistência à mudança e ao decaimento
-            public float    Prevalence;  // fração da pop que porta este meme (0-1)
-            public int      OriginId;    // Id da Figura/criatura que o originou
+            public int        Id;
+            public SymbolType Type;
+            public float      Force;       // intensidade intrínseca do símbolo
+            public float      Rigidity;    // resistência à mudança e ao decaimento
+            public float      Prevalence;  // fração da pop que porta este símbolo (0-1)
+            public int        OriginId;    // Id da Figura/criatura que o originou
         }
 
-        public readonly Dictionary<int, Meme> Pool = new();
+        public readonly Dictionary<int, Symbol> Pool = new();
         private int _nextId;
 
         /// <summary>Coesão cultural: 1 = unida, 0 = cisma — medida de dispersão das prevalências.</summary>
         public float CulturalCohesion = 1f;
 
-        public int MemeCount => Pool.Count;
+        public int SymbolCount => Pool.Count;
 
         /// <summary>
-        /// Cria meme com origem causal (evento ou Figura — nunca espontâneo, M09 §4.1).
+        /// Cria símbolo com origem causal (evento ou Figura — nunca espontâneo, M09 §4.1).
         /// </summary>
-        public int SpawnMeme(MemeType type, float force, int originId, Rng rng)
+        public int SpawnSymbol(SymbolType type, float force, int originId, Rng rng)
         {
             int id = _nextId++;
-            Pool[id] = new Meme
+            Pool[id] = new Symbol
             {
                 Id = id, Type = type, Force = Clamp01(force),
                 Rigidity   = 0.25f + 0.5f * (float)rng.NextDouble(),
@@ -49,31 +49,30 @@ namespace Genese.Core
         }
 
         /// <summary>
-        /// Propaga memes por imitação (M09 §4.1): Figuras com alto prestígio propagam mais rápido.
-        /// Memes incompatíveis competem: a soma de prevalência por tipo é limitada a 1.5.
+        /// Propaga símbolos por imitação (M09 §4.1): Figuras com alto prestígio propagam mais rápido.
+        /// Símbolos incompatíveis competem: a soma de prevalência por tipo é limitada a 1.5.
         /// </summary>
         public void Propagate(List<Creature> cs, Social social, Rng rng)
         {
             if (Pool.Count == 0) return;
 
-            // Calcula bônus de propagação das Figuras para seus memes de origem
-            var figureMemeBonus = new Dictionary<int, float>();  // originId → bônus
+            // Bônus de propagação das Figuras para seus símbolos de origem
+            var figureBonus = new Dictionary<int, float>();  // originId → bônus
             for (int i = 0; i < cs.Count; i++)
             {
                 var c = cs[i];
-                if (c.Alive && c.IsFigure) figureMemeBonus[c.Id] = c.Prestige * 0.008f;
+                if (c.Alive && c.IsFigure) figureBonus[c.Id] = c.Prestige * 0.008f;
             }
 
             var toRemove = new List<int>();
-            // Ordenação explícita: determinístico após restore (Dictionary não preserva ordem interna)
             var ids = new List<int>(Pool.Keys); ids.Sort();
             foreach (int mid in ids)
             {
                 var m = Pool[mid];
                 float rate = m.Force * (1f - m.Rigidity * 0.5f) * 0.004f;
-                if (figureMemeBonus.TryGetValue(m.OriginId, out float bonus)) rate += bonus;
+                if (figureBonus.TryGetValue(m.OriginId, out float bonus)) rate += bonus;
                 m.Prevalence = Clamp01(m.Prevalence + rate);
-                // Decaimento: memes sem suporte vivo erodem devagar
+                // Decaimento: símbolos sem suporte vivo erodem devagar
                 m.Prevalence *= 0.994f + m.Rigidity * 0.005f;
                 if (m.Prevalence < 0.008f) { toRemove.Add(mid); continue; }
                 Pool[mid] = m;
@@ -81,7 +80,7 @@ namespace Genese.Core
             foreach (int mid in toRemove) Pool.Remove(mid);
 
             // Competição por tipo: soma de prevalências ≤ 1.5 (atenção coletiva é finita)
-            var sumByType = new Dictionary<MemeType, float>();
+            var sumByType = new Dictionary<SymbolType, float>();
             foreach (var kv in Pool)
             {
                 sumByType.TryGetValue(kv.Value.Type, out float s);
@@ -96,19 +95,18 @@ namespace Genese.Core
                 foreach (int mid in typeKeys) { var m = Pool[mid]; m.Prevalence *= scale; Pool[mid] = m; }
             }
 
-            // Coesão: quão concentrada está a prevalência (1 = dominado por poucos memes fortes)
+            // Coesão: concentração das prevalências (1 = poucos símbolos dominantes)
             float maxP = 0f, sumP = 0f;
             foreach (var kv in Pool) { sumP += kv.Value.Prevalence; if (kv.Value.Prevalence > maxP) maxP = kv.Value.Prevalence; }
             CulturalCohesion = Pool.Count == 0 ? 1f : Clamp01(maxP / Math.Max(0.01f, sumP / Pool.Count));
         }
 
         /// <summary>
-        /// Lente interpretativa (M09 §4.2): retorna o meme dominante para um tipo de evento.
-        /// Seleção por argmax de força × prevalência — nunca sorteio.
+        /// Lente interpretativa (M09 §4.2): retorna o símbolo dominante para um tipo de evento.
         /// </summary>
-        public Meme? Interpret(MemeType eventType)
+        public Symbol? Interpret(SymbolType eventType)
         {
-            Meme? best = null; float bestScore = -1f;
+            Symbol? best = null; float bestScore = -1f;
             foreach (var kv in Pool)
             {
                 if (kv.Value.Type != eventType) continue;
@@ -118,10 +116,10 @@ namespace Genese.Core
             return best;
         }
 
-        /// <summary>Meme mais dominante (independente de tipo).</summary>
-        public Meme? Dominant()
+        /// <summary>Símbolo mais dominante (independente de tipo).</summary>
+        public Symbol? Dominant()
         {
-            Meme? best = null; float bestScore = -1f;
+            Symbol? best = null; float bestScore = -1f;
             foreach (var kv in Pool)
             {
                 float score = kv.Value.Force * kv.Value.Prevalence;
@@ -137,7 +135,6 @@ namespace Genese.Core
         {
             w.Write(_nextId); w.Write(CulturalCohesion);
             w.Write(Pool.Count);
-            // Ordem determinística por id
             var keys = new List<int>(Pool.Keys); keys.Sort();
             foreach (int k in keys)
             {
@@ -153,9 +150,9 @@ namespace Genese.Core
             int n = r.ReadInt32(); Pool.Clear();
             for (int i = 0; i < n; i++)
             {
-                var m = new Meme
+                var m = new Symbol
                 {
-                    Id = r.ReadInt32(), Type = (MemeType)r.ReadByte(),
+                    Id = r.ReadInt32(), Type = (SymbolType)r.ReadByte(),
                     Force = r.ReadSingle(), Rigidity = r.ReadSingle(),
                     Prevalence = r.ReadSingle(), OriginId = r.ReadInt32()
                 };

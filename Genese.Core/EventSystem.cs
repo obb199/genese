@@ -15,6 +15,21 @@ namespace Genese.Core
         Fusao            // duas civs fundem-se (trust+compat alto)
     }
 
+    /// <summary>
+    /// Os 7 destinos finais da civilização (M14 §5). Emergem de condições acumuladas,
+    /// nunca são impostos. A continuidade indefinida é um destino legítimo.
+    /// </summary>
+    public enum DestinyType : byte
+    {
+        Continuidade,    // estado estável — destino padrão (valid final, GDD §6)
+        Transcendencia,  // organização espiritual máxima atingida
+        Extincao,        // população zero
+        Fusao,           // todas as civs fundiram-se numa só
+        Prosperidade,    // grande pop + cultura coesa + recursos abundantes
+        Estagnacao,      // tabu autodestrutivo → crescimento próximo de zero
+        Divergencia      // múltiplas espécies/civs coexistindo com alta distância genômica
+    }
+
     public struct GameEvent
     {
         public int       CivId;
@@ -79,7 +94,7 @@ namespace Genese.Core
             foreach (var c in civ.Pop.Creatures)
             {
                 if (!c.Alive) continue; n++;
-                int x = Math.Clamp((int)c.X,0,env.W-1), y = Math.Clamp((int)c.Y,0,env.H-1);
+                int x = Clamp((int)c.X,0,env.W-1), y = Clamp((int)c.Y,0,env.H-1);
                 if (env.BalancoAgua[env.Idx(x,y)] < Environment.DroughtThreshold) drought++;
             }
             if (n > 0 && (float)drought / n > 0.45f)
@@ -239,6 +254,87 @@ namespace Genese.Core
             ev.Resolution = $"Guerra activa: civ {civ.Id} em conflito";
             ev.Resolved   = true;  // ativação repetida se mantiver estado de guerra
         }
+
+        // ---- Destinos finais (M14 §5) ---- avaliação por limiares de estado acumulado ----
+
+        /// <summary>
+        /// Avalia o destino actual da simulação (M14 §5). Emergente do estado —
+        /// nunca imposto. A continuidade é retornada quando nenhuma condição se cumpre.
+        /// </summary>
+        public static DestinyType EvaluateDestiny(List<Civilization> civs, Environment env)
+        {
+            if (civs.Count == 0) return DestinyType.Extincao;
+
+            int totalPop = 0;
+            bool anyExtinct = false, allMerged = true;
+            float totalFervor = 0f, totalCohesion = 0f;
+
+            foreach (var civ in civs)
+            {
+                int n = civ.Pop.Count;
+                if (n == 0) { anyExtinct = true; continue; }
+                totalPop += n;
+                allMerged = false; // se há mais de uma civ viva, não foi fusão total
+                totalFervor   += civ.Pop.Belief.Fervor;
+                totalCohesion += civ.Pop.Culture.CulturalCohesion;
+            }
+
+            if (totalPop == 0) return DestinyType.Extincao;
+            if (civs.Count == 1 || (civs.Count > 1 && !allMerged && civs.TrueForAll(c => c.Pop.Count == 0 || AreAllied(c, civs))))
+            {
+                // Fusão: uma única civ sobrevivente ou todas as civs aliadas
+                if (civs.FindAll(c => c.Pop.Count > 0).Count == 1)
+                    return DestinyType.Fusao;
+            }
+
+            float avgFervor   = totalFervor   / Math.Max(1, civs.Count);
+            float avgCohesion = totalCohesion / Math.Max(1, civs.Count);
+
+            // Transcendência: fervor + organização máximos em alguma civ
+            foreach (var civ in civs)
+                if (civ.Pop.Belief.Stage == BeliefStage.Transcendente && civ.Pop.Belief.Organization >= 0.6f)
+                    return DestinyType.Transcendencia;
+
+            // Prosperidade: pop grande + coesão cultural alta + recursos abundantes
+            if (totalPop >= 60 && avgCohesion >= 0.65f && AvgFood(civs, env) >= 0.5f)
+                return DestinyType.Prosperidade;
+
+            // Divergência: múltiplas linhagens com alta distância genómica
+            int totalLin = 0;
+            foreach (var civ in civs) totalLin += Speciation.ContarLinhagens(civ.Pop.Creatures);
+            if (totalLin >= 4) return DestinyType.Divergencia;
+
+            // Estagnação: pool cultural rígido + crescimento próximo de zero
+            if (avgCohesion < 0.2f && totalPop < 8) return DestinyType.Estagnacao;
+
+            return DestinyType.Continuidade;
+        }
+
+        static bool AreAllied(Civilization civ, List<Civilization> civs)
+        {
+            foreach (var other in civs)
+            {
+                if (other.Id == civ.Id) continue;
+                var rel = civ.GetOrDefault(other.Id);
+                if (rel.Stance != CivStance.Aliada && rel.Stance != CivStance.Vassalagem) return false;
+            }
+            return true;
+        }
+
+        static float AvgFood(List<Civilization> civs, Environment env)
+        {
+            float sum = 0f; int n = 0;
+            foreach (var civ in civs)
+                foreach (var c in civ.Pop.Creatures)
+                {
+                    if (!c.Alive) continue;
+                    int x = Clamp((int)c.X, 0, env.W-1), y = Clamp((int)c.Y, 0, env.H-1);
+                    sum += env.Comida[env.Idx(x,y)]; n++;
+                }
+            return n == 0 ? 0f : sum / n;
+        }
+
+        static int Clamp(int v, int lo, int hi) => v < lo ? lo : (v > hi ? hi : v);
 
         // ---- snapshot ----
         public void Write(BinaryWriter w)

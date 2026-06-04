@@ -187,10 +187,11 @@ namespace Genese.Nucleo
             // corpo
             Cube(p, Mat(pal.wall), new Vector3(w,h,d)*s, new Vector3(0,h/2+0.15f,0)*s);
             // vigas verticais
-            float[] vx={-w/2*s,w/2*s,0};
-            foreach(var vxv in vx) Cube(p,Mat(pal.wood),new Vector3(0.08f*s,h*s,0.1f*s),new Vector3(vxv,h/2+0.15f,d/2*s));
-            // telhado em arco (4 cilindros sobrepostos)
-            for(int i=0;i<4;i++){float rr=(1.3f-i*0.12f)*s; var cr=Prim.Cylinder(p,Mat(i==0?pal.roof:pal.roof*0.9f)); cr.transform.localScale=new Vector3(rr*2,0.09f*s,d*0.56f*s); cr.transform.localPosition=new Vector3(0,(h+0.15f+rr*0.35f+i*0.08f),0)*s; cr.transform.localEulerAngles=new Vector3(0,0,90);}
+            float[] vx={-w/2f, w/2f, 0f};
+            foreach(var vxv in vx) Cube(p,Mat(pal.wood),new Vector3(0.08f,h,0.1f)*s,new Vector3(vxv,h/2+0.15f,d/2)*s);
+            // telhado de duas águas (simples e limpo)
+            Cube(p, Mat(pal.roof), new Vector3(w+0.15f, 0.16f, d+0.15f)*s, new Vector3(0, h+0.22f, 0)*s);
+            Cone(p, Mat(pal.roof), (w*0.6f)*s, 0.75f*s, new Vector3(0, h+0.3f, 0)*s, Quaternion.Euler(0,45,0), 4);
             // portão duplo
             Cube(p, Mat(pal.dark), new Vector3(0.55f,0.9f,0.1f)*s, new Vector3(-0.28f,0.45f+0.15f,d/2+0.02f)*s);
             Cube(p, Mat(pal.dark), new Vector3(0.55f,0.9f,0.1f)*s, new Vector3(0.28f,0.45f+0.15f,d/2+0.02f)*s);
@@ -279,59 +280,109 @@ namespace Genese.Nucleo
             Cone(p, Sat(pal.accent), 0.3f*s, 0.62f*s, new Vector3(0,3.6f,0)*s, Quaternion.Euler(0,45,0));
         }
 
-        /// <summary>Torre: cilindro multi-andares, arrow slits, ameias, telhado cônico, bandeira.</summary>
+        /// <summary>Torre procedural: altura, raio, andares e estilo variados por mundo.</summary>
         public static void Torre(Transform p, BuildingPal pal, float s = 1f)
         {
-            // base quadrada
-            Cube(p, Mat(pal.stone), new Vector3(1.6f,0.25f,1.6f)*s, new Vector3(0,0.125f,0)*s);
-            // cilindro principal
-            Cyl(p, Mat(pal.stone), 0.7f*s, 2.0f*s, new Vector3(0,2.0f,0)*s);
-            // andar superior mais estreito
-            Cyl(p, Mat(pal.wall), 0.6f*s, 1.0f*s, new Vector3(0,4.0f,0)*s);
-            // corbels (apoios das ameias)
-            Cyl(p, Mat(pal.stone), 0.72f*s, 0.14f*s, new Vector3(0,4.98f,0)*s);
-            // ameias (8)
-            for(int i=0;i<8;i++){float a=i/8f*Mathf.PI*2; Cube(p,Mat(pal.stone),Vector3.one*0.2f*s,new Vector3(Mathf.Cos(a)*0.64f*s,5.1f*s,Mathf.Sin(a)*0.64f*s));}
-            // telhado cônico
-            Cone(p, Mat(pal.roof), 0.75f*s, 1.05f*s, new Vector3(0,5.12f,0)*s, default, 10);
-            // arrow slits (janelas estreitas)
-            for(int i=0;i<4;i++){float a=i*90f*Mathf.Deg2Rad; Cube(p,Mat(pal.dark),new Vector3(0.1f,0.35f,0.1f)*s,new Vector3(Mathf.Cos(a)*0.68f*s,2.8f*s,Mathf.Sin(a)*0.68f*s));}
-            // porta no térreo
-            Cube(p, Mat(pal.dark), new Vector3(0.42f,0.72f,0.12f)*s, new Vector3(0,0.36f,0.72f)*s);
-            Cone(p, Mat(pal.stone), 0.24f*s, 0.22f*s, new Vector3(0,0.72f,0.72f)*s, default, 10);
-            // mastro + bandeira
-            Cyl(p, Mat(pal.wood), 0.04f*s, 0.85f*s, new Vector3(0,6.2f,0)*s);
-            Cube(p, Sat(pal.flame), new Vector3(0.38f,0.24f,0.02f)*s, new Vector3(0.22f,6.8f,0)*s);
+            float r1 = Random.Range(0.58f, 0.82f);  // raio do andar principal
+            float h1 = Random.Range(1.6f, 2.8f);    // altura do andar principal
+            float h2 = Random.Range(0.8f, 1.4f);    // altura do andar superior
+            float r2 = r1 * Random.Range(0.78f, 0.92f);
+            bool squarePlan = Random.value > 0.5f;  // cilindro ou prisma quadrado
+            int slits = Random.Range(2, 5);
+
+            // Convenção: todos os valores de posição são "unidades abstratas" multiplicados por s
+            // via new Vector3(x, y, z) * s  →  nenhum componente deve ser pré-multiplicado por s.
+            // Cylinder: localScale.y = h, altura total = 2h, extends pos.y ± h. Fundo em 0: pos.y = h.
+            float bodyH  = h1 * 2f;          // altura total do corpo (abstract units)
+            float totalH = bodyH + h2 * 2f;  // altura total da torre (abstract units)
+
+            // base
+            Cube(p, Mat(pal.stone), new Vector3(r1*2.2f, 0.24f, r1*2.2f)*s, new Vector3(0, 0.12f, 0)*s);
+            // corpo principal — fundo em y=0
+            if(squarePlan) Cube(p, Mat(pal.stone), new Vector3(r1*2f, bodyH, r1*2f)*s, new Vector3(0, bodyH*0.5f, 0)*s);
+            else           Cyl(p, Mat(pal.stone), r1*s, h1*s, new Vector3(0, h1, 0)*s);
+            // andar superior — fundo em bodyH
+            Cyl(p, Mat(pal.wall), r2*s, h2*s, new Vector3(0, bodyH+h2, 0)*s);
+            // corbels
+            Cyl(p, Mat(pal.stone), (r2+0.06f)*s, 0.13f*s, new Vector3(0, totalH-0.19f, 0)*s);
+            // ameias
+            int merlon = Random.Range(6,10);
+            for(int i=0;i<merlon;i++){float a=i/(float)merlon*Mathf.PI*2; Cube(p,Mat(pal.stone),Vector3.one*0.19f*s,new Vector3(Mathf.Cos(a)*(r2+0.1f), totalH, Mathf.Sin(a)*(r2+0.1f))*s);}
+            // telhado
+            bool pointy = Random.value > 0.3f;
+            float roofH = pointy ? Random.Range(0.8f,1.4f) : 0.18f;
+            if(pointy) Cone(p, Mat(pal.roof), (r2+0.12f)*s, roofH*s, new Vector3(0, totalH, 0)*s, default, Random.Range(8,12));
+            else        Cyl(p, Mat(pal.roof*0.8f), (r2+0.06f)*s, 0.18f*s, new Vector3(0, totalH+0.09f, 0)*s);
+            // arrow slits (~35% da altura do corpo)
+            for(int i=0;i<slits;i++){float a=i/(float)slits*Mathf.PI*2; Cube(p,Mat(pal.dark),new Vector3(0.09f,0.33f,0.09f)*s,new Vector3(Mathf.Cos(a)*(r1-0.02f), bodyH*0.35f, Mathf.Sin(a)*(r1-0.02f))*s);}
+            // porta
+            Cube(p, Mat(pal.dark), new Vector3(0.40f,0.70f,0.12f)*s, new Vector3(0, 0.35f, r1+0.02f)*s);
+            Cone(p, Mat(pal.stone), 0.22f*s, 0.2f*s, new Vector3(0, 0.7f, r1+0.02f)*s, default, 10);
+            // bandeira
+            float flagBase = totalH + roofH;
+            Cyl(p, Mat(pal.wood), 0.038f*s, 0.8f*s, new Vector3(0, flagBase+0.4f, 0)*s);
+            Cube(p, Sat(pal.flame), new Vector3(0.34f,0.21f,0.02f)*s, new Vector3(0.19f, flagBase+1.0f, 0)*s);
         }
 
         // ================================================================
         //  MEDIEVAL
         // ================================================================
 
-        /// <summary>Castelo: manter principal + 4 torres + muralha + porta + bandeiras.</summary>
+        /// <summary>Castelo procedural: dimensões, torres, ameias e estilo variados por mundo.</summary>
         public static void Castelo(Transform p, BuildingPal pal, float s = 1f)
         {
-            // manter central
-            Cube(p, Mat(pal.stone), new Vector3(3.4f,3.0f,3.0f)*s, new Vector3(0,1.5f,0)*s);
-            // janelas do manter
-            for(int i=0;i<3;i++){Cube(p,Sat(pal.accent),new Vector3(0.25f,0.4f,0.1f)*s,new Vector3((i-1)*0.85f*s,2.2f*s,1.52f*s)); Cube(p,Mat(pal.dark),new Vector3(0.18f,0.3f,0.12f)*s,new Vector3((i-1)*0.85f*s,2.2f*s,1.52f*s));}
-            // ameias do manter
-            for(int i=0;i<7;i++){float x=(i-3)*0.46f*s; Cube(p,Mat(pal.stone),new Vector3(0.3f,0.3f,0.68f)*s,new Vector3(x,3.1f*s,0));}
-            // 4 torres nos cantos
-            float[] cx={-1.8f,1.8f,-1.8f,1.8f},cz={-1.6f,-1.6f,1.6f,1.6f};
-            for(int i=0;i<4;i++){
-                Cyl(p,Mat(pal.stone),0.55f*s,1.85f*s,new Vector3(cx[i]*s,1.85f*s,cz[i]*s));
-                for(int k=0;k<6;k++){float a=k/6f*Mathf.PI*2; Cube(p,Mat(pal.stone),Vector3.one*0.18f*s,new Vector3(cx[i]*s+Mathf.Cos(a)*0.58f*s,3.72f*s,cz[i]*s+Mathf.Sin(a)*0.58f*s));}
-                Cone(p,Mat(pal.roof),0.66f*s,0.8f*s,new Vector3(cx[i]*s,3.76f*s,cz[i]*s),default,8);
-                Cyl(p,Mat(pal.wood),0.04f*s,0.7f*s,new Vector3(cx[i]*s,4.56f*s,cz[i]*s));
-                Cube(p,Sat(pal.flame),new Vector3(0.32f,0.2f,0.02f)*s,new Vector3(cx[i]*s+0.18f*s,4.96f*s,cz[i]*s));
+            // ── Parâmetros procedurais (variam por semente do mundo) ──────────
+            float kW   = Random.Range(2.8f, 4.4f);   // largura do manter
+            float kH   = Random.Range(2.4f, 3.8f);   // altura do manter
+            float kD   = Random.Range(2.4f, 3.4f);   // profundidade do manter
+            int tCount = Random.Range(0,3)==0 ? 2 : 4; // 2 ou 4 torres
+            float tR   = Random.Range(0.45f, 0.68f); // raio das torres
+            float tH   = Random.Range(1.6f, 2.4f);   // altura das torres
+            int merlon = Random.Range(5, 10);         // nº de ameias
+            bool bigGate = Random.value > 0.4f;       // torre-porta grande
+            Color roofCol = Random.value > 0.5f ? pal.roof : Color.Lerp(pal.roof, pal.accent, 0.35f);
+
+            // ── Manter central ───────────────────────────────────────────────
+            Cube(p, Mat(pal.stone), new Vector3(kW, kH, kD)*s, new Vector3(0, kH*0.5f, 0)*s);
+            // janelas do manter (2-3)
+            int wins = Random.Range(2,4);
+            for(int i=0;i<wins;i++){
+                float wx = (i-(wins-1)*0.5f) * (kW/(wins+0.5f)) * s;
+                Cube(p,Sat(pal.accent),new Vector3(0.25f,0.4f,0.1f)*s,new Vector3(wx,(kH*0.72f)*s,(kD*0.51f)*s));
+                Cube(p,Mat(pal.dark),new Vector3(0.16f,0.28f,0.12f)*s,new Vector3(wx,(kH*0.72f)*s,(kD*0.51f)*s));
             }
-            // portão com torre-porta
-            Cube(p, Mat(pal.stone), new Vector3(1.2f,2.0f,0.8f)*s, new Vector3(0,1.0f,1.6f)*s);
-            Cube(p, Mat(pal.dark), new Vector3(0.72f,1.4f,0.82f)*s, new Vector3(0,0.7f,1.6f)*s);
-            Cone(p, Mat(pal.stone), 0.65f*s, 0.5f*s, new Vector3(0,2.1f,1.6f)*s, default, 10);
-            // grades do portão
-            for(int i=0;i<3;i++) Cyl(p,Met(pal.dark),0.03f*s,1.4f*s,new Vector3((i-1)*0.22f*s,0.7f*s,1.6f*s));
+            // ameias do manter
+            for(int i=0;i<merlon;i++){
+                float x=(i-(merlon-1)*0.5f)*(kW*s/(merlon-0.5f));
+                Cube(p,Mat(pal.stone),new Vector3(0.28f,0.3f,0.65f)*s,new Vector3(x,(kH+0.1f)*s,0));
+            }
+            // ── Torres ───────────────────────────────────────────────────────
+            // posições dos cantos segundo o número de torres
+            float hx = kW*0.5f+0.1f, hz = kD*0.5f+0.1f;
+            float[][] corners = tCount==2
+                ? new[]{new[]{-hx,-hz}, new[]{hx,hz}}
+                : new[]{new[]{-hx,-hz}, new[]{hx,-hz}, new[]{-hx,hz}, new[]{hx,hz}};
+            foreach(var c2 in corners)
+            {
+                // c2[0]/c2[1] são unidades abstratas — usar new Vector3(...)*s para escalar
+                float cx2=c2[0], cz2=c2[1];
+                // torre: fundo em y=0 (pos.y = tH = localScale.y do Cyl)
+                Cyl(p, Mat(pal.stone), tR*s, tH*s, new Vector3(cx2, tH, cz2)*s);
+                // ameias da torre no topo (tH*2)
+                float tTop = tH*2f;
+                for(int k=0;k<6;k++){float a=k/6f*Mathf.PI*2; Cube(p,Mat(pal.stone),Vector3.one*0.17f*s,new Vector3(cx2+Mathf.Cos(a)*(tR+0.08f), tTop, cz2+Mathf.Sin(a)*(tR+0.08f))*s);}
+                Cone(p,Mat(roofCol),(tR+0.14f)*s,0.85f*s,new Vector3(cx2, tTop, cz2)*s,default,8);
+                // bandeira
+                Cyl(p,Mat(pal.wood),0.035f*s,0.72f*s,new Vector3(cx2, tTop+0.85f, cz2)*s);
+                Cube(p,Sat(pal.flame),new Vector3(0.30f,0.19f,0.02f)*s,new Vector3(cx2+0.16f, tTop+1.32f, cz2)*s);
+            }
+            // ── Portão ───────────────────────────────────────────────────────
+            float gH = bigGate ? kH*0.72f : kH*0.55f;
+            float gW = bigGate ? 1.3f : 1.0f;
+            Cube(p, Mat(pal.stone), new Vector3(gW, gH, 0.85f)*s, new Vector3(0, gH*0.5f, (kD*0.5f+0.4f))*s);
+            Cube(p, Mat(pal.dark), new Vector3(gW*0.58f, gH*0.78f, 0.9f)*s, new Vector3(0, gH*0.4f, (kD*0.5f+0.4f))*s);
+            Cone(p, Mat(pal.stone), gW*0.56f*s, 0.48f*s, new Vector3(0, gH*s, (kD*0.5f+0.4f)*s), default, 10);
+            for(int i=0;i<3;i++) Cyl(p,Met(pal.dark),0.03f*s,gH*0.78f*s,new Vector3((i-1)*0.22f*s,gH*0.4f*s,(kD*0.5f+0.4f)*s));
         }
 
         /// <summary>Muralha defensiva: longa com torres e arco.</summary>

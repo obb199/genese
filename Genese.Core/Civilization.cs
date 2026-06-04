@@ -57,7 +57,7 @@ namespace Genese.Core
 
         static float CulturalCompatibility(Culture a, Culture b)
         {
-            if (a.MemeCount == 0 || b.MemeCount == 0) return 0.5f;
+            if (a.SymbolCount == 0 || b.SymbolCount == 0) return 0.5f;
             int shared = 0, total = 0;
             foreach (var kv in a.Pool)
             {

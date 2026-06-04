@@ -19,6 +19,7 @@ namespace Genese.Core
         public int DominanceWins; // disputas vencidas (proxy de posição na hierarquia)
         public int ForageCount, ExploreCount, ReproCount; // base do papel
         public bool IsFigure;     // prestígio acima do limiar → Figura
+        public ulong LastReproTick; // cooldown de reprodução (não serializado)
 
         public Creature(int id, Genome genome, float x, float y)
         {

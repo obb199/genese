@@ -22,9 +22,10 @@ namespace Genese.Nucleo
             cam.backgroundColor = new Color(0.66f, 0.73f, 0.78f);
             cam.fieldOfView = 50;
             var orbit = camGo.AddComponent<CameraOrbit>();
-            orbit.target = new Vector3(0, 4f, 0);
-            orbit.radius = Mathf.Max(sim.width, sim.height) * 0.85f;
-            orbit.elevation = 0.62f;
+            // Posição inicial: olha para o centro do mapa de cima
+            float mapSize = Mathf.Max(sim.width, sim.height);
+            orbit.startPosition = new Vector3(0f, mapSize * 0.45f, -mapSize * 0.72f);
+            orbit.startPitch    = 28f;
 
             // sol + ambiente
             var sunGo = new GameObject("Sol");
@@ -43,15 +44,48 @@ namespace Genese.Nucleo
 
             // criaturas (lê a população do núcleo)
             var creatures = new GameObject("Criaturas").AddComponent<CoreCreatureView>();
-            creatures.sim = sim; creatures.world = world; creatures.maxRender = sim.popCap;
+            creatures.sim = sim; creatures.world = world; creatures.maxRender = 500;
 
             // ciclo dia/noite
             var dayNight = gameObject.AddComponent<CoreDayNight>();
             dayNight.sun = sun; dayNight.cam = cam;
 
+            // Save/Load (E10)
+            var saves = gameObject.AddComponent<SaveManager>();
+            saves.sim = sim;
+
+            // Configurações (E10)
+            var settings = gameObject.AddComponent<SettingsManager>();
+            settings.sim = sim;
+
+            // Marcadores visuais de eventos no mapa
+            var markers = new GameObject("EventMarkers").AddComponent<CoreEventMarkers>();
+            markers.sim = sim; markers.world = world;
+
+            // Linhas de tensão entre civs (resentimento → guerra)
+            var tension = new GameObject("TensionLines").AddComponent<CoreTensionLines>();
+            tension.sim = sim; tension.world = world;
+
+            // Avisos de colapso iminente por civ
+            var collapse = new GameObject("CollapseWarning").AddComponent<CoreCollapseWarning>();
+            collapse.sim = sim; collapse.world = world;
+
+            // Linha do tempo visual de eventos (rodapé)
+            var timeline = gameObject.AddComponent<CoreTimeline>();
+            timeline.sim = sim;
+
+            // Toast de eventos em tempo real
+            var toast = gameObject.AddComponent<CoreToast>();
+            toast.sim = sim;
+
+            // Gráfico de população + saúde da run
+            var popGraph = gameObject.AddComponent<CorePopGraph>();
+            popGraph.sim = sim;
+
             // HUD de inspeção + nudges
             var hud = gameObject.AddComponent<CoreHud>();
-            hud.sim = sim; hud.world = world; hud.cam = cam; hud.creatures = creatures; hud.dayNight = dayNight;
+            hud.sim = sim; hud.world = world; hud.cam = cam;
+            hud.creatures = creatures; hud.dayNight = dayNight; hud.saveManager = saves;
         }
     }
 }

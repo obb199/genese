@@ -24,11 +24,21 @@ namespace Genese.Core
         private Rng _symbol;
 #pragma warning restore CS8618
 
-        public int Cap = 1500;
+        public int Cap = int.MaxValue;
         private int _nextId;
         private int _nextLinId = 1;  // 0 = linhagem original; >0 = novas linhagens híbridas (M03)
-        private int[] _nearIdx = Array.Empty<int>();
+        private int[] _nearIdx   = Array.Empty<int>();
         private float[] _nearDist = Array.Empty<float>();
+        private int[] _nearCount  = Array.Empty<int>();  // vizinhos dentro do raio de densidade
+
+        // ── Stats de dinâmica populacional (janela de 50 ticks) ──────────────
+        public int BirthsRecent { get; private set; }
+        public int DeathsRecent { get; private set; }
+        private int _birthsPeriod, _deathsPeriod;
+
+        /// <summary>Pressão global de população sobre a reprodução [0..0.09].</summary>
+        public float GlobalPopPressure { get; private set; }
+        private float _globalPopPressure;
 
         public int Count
         {
@@ -72,74 +82,124 @@ namespace Genese.Core
         public void Step(Environment env, ulong tick, Rng decision, Rng repro)
         {
             ComputeNearest();
+            ApplyDensityFoodPressure(env);
+
+            // Pressão global de população: quanto mais criaturas, mais difícil reproduzir.
+            // Escala linear até ao cap de 0.09 — ao redor de 60 criaturas fica quase impossível.
+            int alive = Count;
+            _globalPopPressure = Math.Min(0.09f, alive * 0.0015f);
+            GlobalPopPressure  = _globalPopPressure;
+
             var births = new List<Creature>();
+            int aliveBefore = alive;
             for (int i = 0; i < Creatures.Count; i++)
             {
                 var c = Creatures[i];
                 if (!c.Alive) continue;
 
                 c.Age++;
-                // upkeep metabólico (necessidade de comer sobe com o tempo)
-                c.Energy -= 0.003f + 0.005f * c.Metabolism + 0.003f * c.Size;
+                // upkeep metabólico + estresse de superlotação (cada vizinho próximo aumenta o custo)
+                float densityStress = _nearCount[i] * 0.0022f;
+                c.Energy -= 0.003f + 0.005f * c.Metabolism + 0.003f * c.Size + densityStress;
 
                 int cx = Clamp((int)c.X, env.W), cy = Clamp((int)c.Y, env.H);
-                Act(c, env, cx, cy, decision, repro, births, i);
+                Act(c, env, cx, cy, decision, repro, births, i, tick);
 
                 int maxAge = (int)(250 + 900 * c.Trait("longevidade"));
                 if (c.Energy <= 0f || c.Age > maxAge) c.Alive = false;
             }
 
-            int alive = Count;
-            foreach (var b in births) { if (alive >= Cap) break; Creatures.Add(b); alive++; }
+            // Contabiliza mortes e nascimentos para stats da HUD
+            int aliveAfterProcess = Count;
+            _deathsPeriod += aliveBefore - aliveAfterProcess;
+            _birthsPeriod += births.Count;
+
+            foreach (var b in births) { Creatures.Add(b); }
             Creatures.RemoveAll(x => !x.Alive);
 
-            // camada social emergente (M05): interações locais, esquecimento, detecção de grupos
-            if (tick % 4 == 0) Social.Interact(Creatures);
-            if (tick % 20 == 0)
+            // Publica stats numa janela de 50 ticks
+            if (tick % 50 == 0)
+            {
+                BirthsRecent = _birthsPeriod;
+                DeathsRecent = _deathsPeriod;
+                _birthsPeriod = 0;
+                _deathsPeriod = 0;
+            }
+
+            // camada social emergente (M05) — cadências mais frequentes p/ interações ricas
+            if (tick % 2 == 0) Social.Interact(Creatures);
+            if (tick % 12 == 0)
             {
                 Social.Decay(0.97f);
-                // prestígio também esmaece: reflete posição RECENTE, não soma vitalícia —
-                // por isso Figuras permanecem RARAS (só quem sustenta vitórias/reprodução).
                 for (int i = 0; i < Creatures.Count; i++) Creatures[i].Prestige *= 0.94f;
-                // cultura: propagação de memes (cadência igual ao esquecimento social)
                 Culture.Propagate(Creatures, Social, _symbol);
             }
-            if (tick % 25 == 0) { Social.DetectGroups(Creatures); Social.UpdateFigures(Creatures); }
+            if (tick % 15 == 0) { Social.DetectGroups(Creatures); Social.UpdateFigures(Creatures); }
 
-            // Camada simbólica (E07/M08-M10): língua, religião, memes de Figuras
-            if (tick % 30 == 0)
+            // Camada simbólica (E07/M08-M10)
+            if (tick % 20 == 0)
                 Language.Step(Count, Social.GroupCount, Social.FigureCount, tick, _symbol);
-            if (tick % 40 == 0)
+            if (tick % 30 == 0)
                 Belief.Step(Count, Social.GroupCount, Social.FigureCount, _symbol);
-            if (tick % 50 == 0 && Social.FigureCount > 0)
-                SpawnCulturalMemes();
+            if (tick % 35 == 0 && Social.FigureCount > 0)
+                SpawnCulturalSymbols();
         }
 
         /// <summary>
         /// Figuras criam memes de forma causal (M09 §4.1): líderes geram Valores,
         /// parentais geram Ritos — nunca espontâneos.
         /// </summary>
-        void SpawnCulturalMemes()
+        void SpawnCulturalSymbols()
         {
             for (int i = 0; i < Creatures.Count; i++)
             {
                 var c = Creatures[i];
                 if (!c.IsFigure || !c.Alive) continue;
-                if (Culture.MemeCount >= 12) break; // limite de atenção coletiva
+                if (Culture.SymbolCount >= 12) break; // limite de atenção coletiva
                 string role = c.Role();
                 if (role == "Líder" && c.Trait("comp.lideranca") > 0.65f)
-                    Culture.SpawnMeme(MemeType.Valor, 0.25f + 0.45f * c.Trait("comp.lideranca"), c.Id, _symbol);
+                    Culture.SpawnSymbol(SymbolType.Valor, 0.25f + 0.45f * c.Trait("comp.lideranca"), c.Id, _symbol);
                 else if (role == "Parental")
-                    Culture.SpawnMeme(MemeType.Rito, 0.20f + 0.40f * c.Trait("comp.invParental"), c.Id, _symbol);
+                    Culture.SpawnSymbol(SymbolType.Rito, 0.20f + 0.40f * c.Trait("comp.invParental"), c.Id, _symbol);
             }
         }
 
-        // vizinho vivo mais próximo de cada criatura (para a ação de aproximar/bando)
+        // Reduz a regeneração de comida nas células mais populosas (depleção por concentração).
+        // Cada criatura viva numa célula consome uma fração extra da capacidade de recuperação.
+        void ApplyDensityFoodPressure(Environment env)
+        {
+            // Conta criaturas vivas por célula
+            var count = new int[env.W * env.H];
+            foreach (var c in Creatures)
+            {
+                if (!c.Alive) continue;
+                int cx = Clamp((int)c.X, env.W), cy = Clamp((int)c.Y, env.H);
+                count[env.Idx(cx, cy)]++;
+            }
+            // Aplica depleção proporcional à ocupação local
+            for (int i = 0; i < count.Length; i++)
+            {
+                if (count[i] < 2) continue;
+                // Cada habitante extra drena 3% da comida disponível na célula
+                float drain = (count[i] - 1) * 0.03f;
+                env.Comida[i] = Math.Max(0f, env.Comida[i] - drain * env.Comida[i]);
+            }
+        }
+
+        // vizinho vivo mais próximo + contagem de vizinhos no raio de densidade
         void ComputeNearest()
         {
             int n = Creatures.Count;
-            if (_nearIdx.Length < n) { _nearIdx = new int[n]; _nearDist = new float[n]; }
-            for (int i = 0; i < n; i++) { _nearIdx[i] = -1; _nearDist[i] = 1e9f; }
+            if (_nearIdx.Length < n)
+            {
+                _nearIdx   = new int[n];
+                _nearDist  = new float[n];
+                _nearCount = new int[n];
+            }
+            for (int i = 0; i < n; i++) { _nearIdx[i] = -1; _nearDist[i] = 1e9f; _nearCount[i] = 0; }
+
+            const float DensityR2 = 36f; // raio 6: conta todos os vizinhos nessa esfera
+
             for (int i = 0; i < n; i++)
             {
                 var a = Creatures[i]; if (!a.Alive) continue;
@@ -149,12 +209,13 @@ namespace Genese.Core
                     float dx = a.X - b.X, dy = a.Y - b.Y, d2 = dx * dx + dy * dy;
                     if (d2 < _nearDist[i]) { _nearDist[i] = d2; _nearIdx[i] = j; }
                     if (d2 < _nearDist[j]) { _nearDist[j] = d2; _nearIdx[j] = i; }
+                    if (d2 < DensityR2)    { _nearCount[i]++; _nearCount[j]++; }
                 }
             }
         }
 
         // ações: 0 Forragear · 1 Mover p/ comida · 2 Explorar · 3 Descansar · 4 Reproduzir · 5 Aproximar (social)
-        private void Act(Creature c, Environment env, int cx, int cy, Rng decision, Rng repro, List<Creature> births, int self)
+        private void Act(Creature c, Environment env, int cx, int cy, Rng decision, Rng repro, List<Creature> births, int self, ulong tick)
         {
             float hunger = 1f - c.Energy;
             int here = env.Idx(cx, cy);
@@ -171,21 +232,39 @@ namespace Genese.Core
                 if (f > bestFood) { bestFood = f; bx = nx; by = ny; }
             }
 
-            float expl = c.Trait("comp.exploracao"), curio = c.Trait("comp.curiosidade"), social = c.Trait("comp.sociabilidade");
-            bool canReprod = c.Energy > 0.62f && c.Age > 40;
+            float expl  = c.Trait("comp.exploracao"),  curio  = c.Trait("comp.curiosidade");
+            float social = c.Trait("comp.sociabilidade");
+            float coragem = c.Trait("comp.medoCoragem");   // M02: alto = corajoso, baixo = medroso
+            float nomad   = c.Trait("comp.nomadismo");     // M02: alto = ânsia de se mover
+            float vigil   = c.Trait("sentidos.percepcao"); // M02: percepção — detecta comida melhor
+            float armaz   = c.Trait("comp.armazenamento"); // M02: poupa → repousa mais cedo
+            // Limiar de reprodução = base + pressão local (densidade) + pressão global (pop total)
+            float localPressure  = Math.Min(0.06f, _nearCount[self] * 0.025f);
+            float reproThresh    = 0.90f + localPressure + _globalPopPressure;
+            bool canReprod = c.Energy > reproThresh
+                          && c.Age > 110
+                          && (tick - c.LastReproTick) > 350;
 
             // vizinho mais próximo (para socializar/formar bando — M05 §4.1)
             int nn = _nearIdx[self]; float nd = nn >= 0 ? (float)Math.Sqrt(_nearDist[self]) : 999f;
             float affin = nn >= 0 ? Social.Affinity(c.Id, Creatures[nn].Id) : 0f;
 
             const float Impossible = -1e9f; // ação inviável → prob. ~0 no softmax
-            Span<float> u = stackalloc float[6];
-            u[0] = hunger * 1.3f * (0.15f + food);                         // forragear aqui
-            u[1] = bestFood > food ? hunger * (0.15f + bestFood) * (0.4f + 0.6f * expl) : Impossible; // ir até comida melhor
-            u[2] = 0.18f + 0.5f * expl + 0.4f * curio;                     // explorar
-            u[3] = c.Energy > 0.6f ? 0.4f : 0.08f;                         // descansar
-            u[4] = canReprod ? c.Energy * 1.6f * (0.3f + c.Trait("fertilidade")) : Impossible; // reproduzir
-            u[5] = (nn >= 0 && nd > 1.2f && nd < 12f) ? (0.15f + 0.6f * social + 0.5f * affin) * (0.4f + 0.6f * c.Energy) : Impossible; // aproximar
+            float[] u = new float[6];
+            u[0] = hunger * 1.3f * (0.15f + food);                                              // forragear aqui
+            // Vigilância/percepção amplifica detecção de comida distante (M02 §3)
+            float foodBonus = 0.4f + 0.6f * expl + 0.35f * vigil;
+            u[1] = bestFood > food ? hunger * (0.15f + bestFood) * foodBonus : Impossible;      // ir até comida
+            // Nomadismo e curiosidade amplificam explorar; coragem reduz hesitação (M02 §6)
+            u[2] = 0.14f + 0.45f * expl + 0.30f * curio + 0.20f * nomad + 0.10f * coragem;    // explorar
+            // Armazenamento: poupa energia mais cedo; medo aumenta tendência a pousar (M02 §6)
+            float restThresh = 0.55f - 0.12f * armaz + 0.08f * (1f - coragem);
+            u[3] = c.Energy > restThresh ? 0.38f + 0.15f * armaz : 0.07f;                      // descansar
+            u[4] = canReprod ? c.Energy * 0.38f * (0.12f + c.Trait("fertilidade")) : Impossible; // reproduzir
+            // Coragem baixa diminui aproximação de estranhos (M02 §6 — interação com M05)
+            u[5] = (nn >= 0 && nd > 1.2f && nd < 12f)
+                 ? (0.12f + 0.55f * social + 0.45f * affin + 0.12f * coragem) * (0.4f + 0.6f * c.Energy)
+                 : Impossible;                                                                   // aproximar
 
             float flex = 0.15f + 0.7f * curio;                            // flexibilidade comportamental
             int action = SoftmaxPick(u, flex, decision);
@@ -234,9 +313,14 @@ namespace Genese.Core
 
                     var child = Reproduction.Reproduce(c.Genome, dadGen, repro, effPress, popFactor);
                     child.LinhagemId = childLin;  // M03: aplica cisão de linhagem se houver
-                    c.Energy -= 0.45f;
+                    // Investimento parental (M02 §4.2): alta invParental → mais energia ao filho
+                    float invPar = c.Trait("comp.invParental");
+                    float parentCost      = 0.75f + 0.15f * invPar;   // reprodução muito custosa
+                    float offspringEnergy = 0.13f + 0.07f * invPar;   // filho nasce fraco
+                    c.Energy -= parentCost;
+                    c.LastReproTick = tick;
                     c.ReproCount++; c.Prestige += 0.05f;
-                    births.Add(new Creature(_nextId++, child, c.X, c.Y) { Energy = 0.38f });
+                    births.Add(new Creature(_nextId++, child, c.X, c.Y) { Energy = offspringEnergy });
                     break;
                 case 5: // aproximar do vizinho (gregarismo → bandos emergem)
                     MoveToward(c, Creatures[nn].X, Creatures[nn].Y, env);
@@ -256,12 +340,12 @@ namespace Genese.Core
         }
 
         // softmax sobre utilidades; temperatura = flexibilidade (rígido→argmax)
-        private static int SoftmaxPick(Span<float> u, float flex, Rng rng)
+        private static int SoftmaxPick(float[] u, float flex, Rng rng)
         {
             float temp = Math.Max(0.05f, flex);
             float max = float.NegativeInfinity;
             for (int i = 0; i < u.Length; i++) if (u[i] > max) max = u[i];
-            double sum = 0; Span<double> e = stackalloc double[8];
+            double sum = 0; double[] e = new double[u.Length];
             for (int i = 0; i < u.Length; i++) { e[i] = Math.Exp((u[i] - max) / temp); sum += e[i]; }
             double r = rng.NextDouble() * sum, acc = 0;
             for (int i = 0; i < u.Length; i++) { acc += e[i]; if (r <= acc) return i; }

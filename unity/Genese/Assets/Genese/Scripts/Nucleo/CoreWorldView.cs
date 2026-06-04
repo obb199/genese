@@ -24,6 +24,11 @@ namespace Genese.Nucleo
         float   _refresh;
         int     _builtVersion = -1;
 
+        // Overlay de visualização (M13 §4.1 — função pura do estado)
+        // 0=Bioma 1=Comida 2=Agua 3=Temperatura 4=Densidade 5=Grupos
+        public int ActiveOverlay;
+        float[] _densityMap; // precomputado por frame (densidade de criaturas por célula)
+
         static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out var c); return c; }
 
         // ================================================================
@@ -107,20 +112,12 @@ namespace Genese.Nucleo
             }
         }
 
-        // Kernel gaussiano 5×5 — transição natural entre biomas; cada polo usa seu tema
+        // Kernel gaussiano 5×5 — transição natural entre biomas.
+        // Sempre calcula cores reais de bioma primeiro; depois aplica o tema fantástico
+        // como um tint por cima (55% tema + 45% bioma), preservando a variação de biomas.
         Color BlendedColor(int x, int y)
         {
-            int t = ThemeAt(x);
             int W = _env.W, H = _env.H;
-            if (t > 0)
-            {
-                float alt = _env.Altitude[y * W + x];
-                if (alt < CG.Environment.SeaLevel) return Hex("#1A3A4A");
-                Color c = Color.Lerp(_themes[t].ground2, _themes[t].ground, (alt - CG.Environment.SeaLevel) / 0.45f);
-                if (alt > CG.Environment.MountainAlt) c = Color.Lerp(c, _themes[t].rock, (alt - CG.Environment.MountainAlt) / 0.28f);
-                return c;
-            }
-            // pesos gaussianos para kernel 5×5
             float[,] w = {
                 {0.01f,0.04f,0.06f,0.04f,0.01f},
                 {0.04f,0.10f,0.14f,0.10f,0.04f},
@@ -128,21 +125,35 @@ namespace Genese.Nucleo
                 {0.04f,0.10f,0.14f,0.10f,0.04f},
                 {0.01f,0.04f,0.06f,0.04f,0.01f}
             };
+
+            // Kernel sobre cores REAIS de bioma (t=0), independente do tema fantástico
             Color sum = Color.black; float total = 0f;
             for (int dy = -2; dy <= 2; dy++)
                 for (int dx = -2; dx <= 2; dx++)
                 {
                     int nx = Mathf.Clamp(x+dx,0,W-1), ny = Mathf.Clamp(y+dy,0,H-1);
                     float ww = w[dy+2, dx+2];
-                    // usa o tema da célula vizinha para transição de cor suave entre polos
-                    sum += BiomeBaseColor((CG.Biome)_env.Bioma[ny * W + nx], ThemeAt(nx)) * ww;
+                    sum += BiomeBaseColor((CG.Biome)_env.Bioma[ny * W + nx], 0) * ww;
                     total += ww;
                 }
-            Color result = sum / total;
+            Color biomeCol = sum / total;
+
             float a = _env.Altitude[y * W + x];
             if (a > CG.Environment.MountainAlt)
-                result = Color.Lerp(result, Hex("#E0E4E0"), (a - CG.Environment.MountainAlt) * 3f);
-            return result;
+                biomeCol = Color.Lerp(biomeCol, Hex("#E0E4E0"), (a - CG.Environment.MountainAlt) * 3f);
+
+            // Tema fantástico: aplica como tint sobre as cores de bioma (não as substitui)
+            int t = ThemeAt(x);
+            if (t == 0) return biomeCol; // Clássico: cores puras de bioma
+
+            if (a < CG.Environment.SeaLevel) return Hex("#1A3A4A");
+            Color themeCol = Color.Lerp(_themes[t].ground2, _themes[t].ground,
+                Mathf.Clamp01((a - CG.Environment.SeaLevel) / 0.45f));
+            if (a > CG.Environment.MountainAlt)
+                themeCol = Color.Lerp(themeCol, _themes[t].rock, (a - CG.Environment.MountainAlt) / 0.28f);
+
+            // 55% tema + 45% bioma: identidade fantástica mantida, mas biomas visíveis
+            return Color.Lerp(themeCol, biomeCol, 0.45f);
         }
 
         // ================================================================
@@ -151,7 +162,104 @@ namespace Genese.Nucleo
             if (sim == null || sim.Sim == null) return;
             if (sim.WorldVersion != _builtVersion) { Rebuild(); return; }
             _refresh += Time.deltaTime;
-            if (_refresh > 2.5f && _mesh != null) { _refresh = 0f; RefreshMesh(); } // refresh mais espaçado
+            if (_refresh > 2.5f && _mesh != null) { _refresh = 0f; RefreshMesh(); }
+        }
+
+        /// <summary>Força refresh imediato do mesh (após modificação de terreno).</summary>
+        public void ForceRefresh() { if (_mesh != null) { RefreshMesh(); _refresh = 0f; } }
+
+        // ── Terraform: modifica o terreno em tempo real ───────────────────────
+
+        /// <summary>Eleva o terreno numa área circular — cria montanhas.</summary>
+        public void RaiseTerrain(int cx, int cy, float radius, float amount)
+            => ModifyTerrain(cx, cy, radius, amount);
+
+        /// <summary>Abaixa o terreno numa área circular — cria vales/água.</summary>
+        public void LowerTerrain(int cx, int cy, float radius, float amount)
+            => ModifyTerrain(cx, cy, radius, -amount);
+
+        void ModifyTerrain(int cx, int cy, float radius, float delta)
+        {
+            if (_env == null) return;
+            int r = Mathf.CeilToInt(radius);
+            for (int dy = -r; dy <= r; dy++)
+            for (int dx = -r; dx <= r; dx++)
+            {
+                int x = cx + dx, y = cy + dy;
+                if (x < 0 || y < 0 || x >= _env.W || y >= _env.H) continue;
+                float dist = Mathf.Sqrt(dx*dx + dy*dy);
+                if (dist > radius) continue;
+                float falloff = 1f - dist / radius;  // suave nas bordas
+                int i = _env.Idx(x, y);
+                _env.Altitude[i] = Mathf.Clamp01(_env.Altitude[i] + delta * falloff);
+                // Reclassifica bioma
+                _env.Bioma[i] = (byte)CG.Environment.Derive(_env.Altitude[i], _env.Temp[i], _env.Umidade[i]);
+            }
+            ForceRefresh();
+        }
+
+        /// <summary>Aumenta comida e umidade numa área (plantar / fazer chover).</summary>
+        public void AddFood(int cx, int cy, float radius, float amount)
+        {
+            if (_env == null) return;
+            int r = Mathf.CeilToInt(radius);
+            for (int dy = -r; dy <= r; dy++)
+            for (int dx = -r; dx <= r; dx++)
+            {
+                int x = cx+dx, y = cy+dy;
+                if (x<0||y<0||x>=_env.W||y>=_env.H) continue;
+                if (Mathf.Sqrt(dx*dx+dy*dy) > radius) continue;
+                int i = _env.Idx(x, y);
+                _env.Comida[i]       = Mathf.Clamp01(_env.Comida[i] + amount);
+                _env.BalancoAgua[i]  = Mathf.Clamp(_env.BalancoAgua[i] + amount * 0.5f, -1f, 1f);
+            }
+        }
+
+        /// <summary>Remove comida de uma área (praga / incêndio).</summary>
+        public void DrainFood(int cx, int cy, float radius, float amount)
+        {
+            if (_env == null) return;
+            int r = Mathf.CeilToInt(radius);
+            for (int dy=-r; dy<=r; dy++)
+            for (int dx=-r; dx<=r; dx++)
+            {
+                int x=cx+dx, y=cy+dy;
+                if (x<0||y<0||x>=_env.W||y>=_env.H) continue;
+                if (Mathf.Sqrt(dx*dx+dy*dy)>radius) continue;
+                _env.Comida[_env.Idx(x,y)] = Mathf.Max(0f, _env.Comida[_env.Idx(x,y)] - amount);
+            }
+        }
+
+        /// <summary>Destrói construções (GameObjects) numa área do mundo.</summary>
+        public int DemolishBuildings(Vector3 worldPos, float radius)
+        {
+            int destroyed = 0;
+            var hits = Physics.OverlapSphere(worldPos, radius);
+            foreach (var h in hits)
+            {
+                // Identifica construções pelo nome ou tag de terreno (exclui terreno/água/criaturas)
+                var go = h.gameObject;
+                string n = go.name.ToLowerInvariant();
+                bool isBuilding = n.Contains("aldeia") || n.Contains("castelo") || n.Contains("torre")
+                    || n.Contains("igreja") || n.Contains("celeiro") || n.Contains("forno")
+                    || n.Contains("poco") || n.Contains("templo") || n.Contains("altar")
+                    || n.Contains("menir") || n.Contains("tenda") || n.Contains("choca")
+                    || n.Contains("totem") || n.Contains("obelisco") || n.Contains("muro")
+                    || n.Contains("fprop") || n.Contains("arvore") || n.Contains("rocha")
+                    || n.Contains("monumento") || n.Contains("fogueira") || n.Contains("cerca");
+                if (!isBuilding) continue;
+                // Sobe até o root do objeto-pai para não deixar fantasmas
+                var root = go.transform;
+                while (root.parent != null && root.parent != transform) root = root.parent;
+                if (root.GetComponent<CoreTerrainTag>() == null &&
+                    root.GetComponent<CoreCreatureTag>() == null)
+                {
+                    Destroy(root.gameObject);
+                    destroyed++;
+                    if (destroyed >= 3) break; // limita impacto por clique
+                }
+            }
+            return destroyed;
         }
 
         void Rebuild()
@@ -195,7 +303,7 @@ namespace Genese.Nucleo
                 {
                     int i = y * W + x;
                     _verts[i] = new Vector3((x - ox) * cellSize, _env.Altitude[i] * heightScale, (y - oz) * cellSize);
-                    _cols[i]  = BlendedColor(x, y);
+                    _cols[i]  = VertexColor(x, y);
                 }
             int tri = 0;
             for (int y = 0; y < H - 1; y++)
@@ -227,11 +335,77 @@ namespace Genese.Nucleo
 
         void RefreshMesh()
         {
-            int W = _env.W, H = _env.H; float ox = W*0.5f, oz = H*0.5f;
+            int W = _env.W, H = _env.H;
+            // Precomputa mapa de densidade de criaturas (para overlay 4)
+            if (ActiveOverlay == 4) ComputeDensity();
             for (int y = 0; y < H; y++)
                 for (int x = 0; x < W; x++)
-                { int i = y*W+x; _verts[i].y = _env.Altitude[i]*heightScale; _cols[i] = BlendedColor(x,y); }
+                { int i = y*W+x; _verts[i].y = _env.Altitude[i]*heightScale; _cols[i] = VertexColor(x,y); }
             _mesh.vertices = _verts; _mesh.colors = _cols; _mesh.RecalculateNormals();
+        }
+
+        // Substitui BlendedColor considerando o overlay activo (M13 §4.1 — pura, não altera estado)
+        Color VertexColor(int x, int y)
+        {
+            if (ActiveOverlay == 0) return BlendedColor(x, y);
+            int i = y * _env.W + x;
+            float alt = _env.Altitude[i];
+            if (alt < CG.Environment.SeaLevel) return new Color(0.08f, 0.18f, 0.35f); // oceano em todos overlays
+            return ActiveOverlay switch
+            {
+                1 => OverlayGrad(_env.Comida[i],    new Color(0.55f,0.18f,0.10f), new Color(0.15f,0.70f,0.15f)),
+                2 => OverlayGrad(_env.Agua[i],      new Color(0.78f,0.65f,0.40f), new Color(0.10f,0.38f,0.82f)),
+                3 => OverlayGrad(_env.Temp[i],      new Color(0.12f,0.28f,0.88f), new Color(0.92f,0.15f,0.10f)),
+                4 => OverlayDensity(x, y),
+                5 => OverlayGroup(x, y),
+                _ => BlendedColor(x, y)
+            };
+        }
+
+        static Color OverlayGrad(float t, Color lo, Color hi)
+            => Color.Lerp(lo, hi, Mathf.Clamp01(t));
+
+        Color OverlayDensity(int x, int y)
+        {
+            if (_densityMap == null) return Color.black;
+            float d = Mathf.Clamp01(_densityMap[y * _env.W + x] * 5f); // 0.2 = saturation
+            return Color.Lerp(new Color(0.15f,0.18f,0.15f), new Color(1f,0.9f,0.1f), d);
+        }
+
+        Color OverlayGroup(int x, int y)
+        {
+            // Colore pelo grupo da criatura mais próxima nessa célula
+            if (sim?.Sim == null) return Color.grey;
+            float px = x + 0.5f, py = y + 0.5f;
+            foreach (var civ in sim.Sim.Civs)
+                foreach (var c in civ.Pop.Creatures)
+                {
+                    if (!c.Alive) continue;
+                    float dx = c.X - px, dy = c.Y - py;
+                    if (dx*dx + dy*dy < 1.5f)
+                    {
+                        if (c.GroupId < 0) return new Color(0.5f,0.5f,0.5f);
+                        float h = (c.GroupId * 137.508f) % 360f; // golden angle → cores distintas
+                        return Color.HSVToRGB(h/360f, 0.7f, 0.8f);
+                    }
+                }
+            return new Color(0.18f, 0.20f, 0.18f);
+        }
+
+        void ComputeDensity()
+        {
+            if (_densityMap == null || _densityMap.Length != _env.W * _env.H)
+                _densityMap = new float[_env.W * _env.H];
+            for (int i = 0; i < _densityMap.Length; i++) _densityMap[i] *= 0.85f; // suaviza
+            if (sim?.Sim == null) return;
+            foreach (var civ in sim.Sim.Civs)
+                foreach (var c in civ.Pop.Creatures)
+                {
+                    if (!c.Alive) continue;
+                    int cx = Mathf.Clamp((int)c.X, 0, _env.W-1);
+                    int cy = Mathf.Clamp((int)c.Y, 0, _env.H-1);
+                    _densityMap[cy * _env.W + cx] = Mathf.Min(1f, _densityMap[cy * _env.W + cx] + 0.18f);
+                }
         }
 
         // ================================================================
@@ -389,9 +563,42 @@ namespace Genese.Nucleo
             PlaceVillage(posR.x, posR.y, ciR, large: true);
         }
 
+        // Verifica se o terreno ao redor de (cx,cy) é plano o suficiente para uma aldeia.
+        bool IsFlatEnough(int cx, int cy, int radius = 7)
+        {
+            float minA = 1f, maxA = 0f;
+            int r2 = radius * radius;
+            bool any = false;
+            for (int dy = -radius; dy <= radius; dy++)
+            for (int dx = -radius; dx <= radius; dx++)
+            {
+                if (dx*dx + dy*dy > r2) continue;
+                int x = Mathf.Clamp(cx+dx, 0, _env.W-1);
+                int y = Mathf.Clamp(cy+dy, 0, _env.H-1);
+                float a = _env.Altitude[y*_env.W+x];
+                if (a < CG.Environment.SeaLevel) continue; // ignora células oceânicas
+                if (a < minA) minA = a;
+                if (a > maxA) maxA = a;
+                any = true;
+            }
+            return any && (maxA - minA) < 0.22f; // ≤ 2.2 unidades de variação de altura no raio
+        }
+
         Vector2Int FindLandCenter(int sx, int sy, int minSep, ref List<Vector2Int> placed)
         {
             int W = _env.W, H = _env.H;
+            // Primeira tentativa: terreno plano + sem barreira
+            for (int r = 0; r < 16; r++)
+            {
+                int cx = Mathf.Clamp(sx + Random.Range(-r*2, r*2+1), 2, W-2);
+                int cy = Mathf.Clamp(sy + Random.Range(-r*2, r*2+1), 2, H-2);
+                if (_env.IsBarrier(cx, cy)) continue;
+                if (!IsFlatEnough(cx, cy)) continue;
+                bool ok = true;
+                foreach (var p in placed) { if (Mathf.Abs(p.x-cx)+Mathf.Abs(p.y-cy) < minSep*4) { ok=false; break; } }
+                if (ok) { placed.Add(new Vector2Int(cx, cy)); return new Vector2Int(cx, cy); }
+            }
+            // Fallback: apenas sem barreira (requisito de planura relaxado)
             for (int r = 0; r < 12; r++)
             {
                 int cx = Mathf.Clamp(sx + Random.Range(-r*2, r*2+1), 2, W-2);
@@ -436,46 +643,67 @@ namespace Genese.Nucleo
             Monument(mroot, ci, pal, scale);
         }
 
-        // Posições dos edifícios — 6 spots (mais para aldeias grandes)
-        static readonly Vector2[] _spots6 = {
-            new Vector2(-3.8f, 2.4f), new Vector2(4.0f, 2.0f),
-            new Vector2(1.2f, -4.2f), new Vector2(-4.2f,-2.8f),
-            new Vector2(-0.4f, 4.5f), new Vector2(3.8f, -3.5f)
+        // Posições dos edifícios — 8 spots para aldeias grandes, 5 para pequenas
+        static readonly Vector2[] _spots8 = {
+            new Vector2(-3.8f,  2.4f), new Vector2( 4.0f,  2.0f),
+            new Vector2( 1.2f, -4.2f), new Vector2(-4.2f, -2.8f),
+            new Vector2(-0.4f,  4.5f), new Vector2( 3.8f, -3.5f),
+            new Vector2( 5.2f,  0.5f), new Vector2(-5.0f,  0.8f)
         };
-        static readonly Vector2[] _spots4 = {
-            new Vector2(-2.6f, 1.8f), new Vector2(3.2f, 1.5f),
-            new Vector2(0.8f, -3.2f), new Vector2(-3.4f,-2.0f)
+        static readonly Vector2[] _spots5 = {
+            new Vector2(-2.6f,  1.8f), new Vector2( 3.2f,  1.5f),
+            new Vector2( 0.8f, -3.2f), new Vector2(-3.4f, -2.0f),
+            new Vector2( 0.2f,  3.8f)
+        };
+
+        // Pool alargado de construções por cultura (8 opções → quantidade varia aleatoriamente)
+        static readonly string[][] _buildingPools = {
+            new[]{ "choca","totem","casa_madeira","celeiro","poco","forno","cerca","tenda" },      // 0 Floresta
+            new[]{ "forno","obelisco","choca","muro","poco","celeiro","totem","tenda" },           // 1 Árido
+            new[]{ "castelo","torre","igreja","muralha","poco","celeiro","muro","obelisco" },      // 2 Medieval
+            new[]{ "templo","altar","menir","santuario","poco","torre","obelisco","farol" },       // 3 Arcana
+            new[]{ "templo","obelisco","torre","celeiro","poco","forno","muro","muralha" },        // 4 Imperial
+            new[]{ "torre","muro","celeiro","poco","farol","barco","obelisco","forno" },           // 5 Tecnológica
+            new[]{ "doca","farol","barco","poco","celeiro","choca","muro","tenda" },               // 6 Aquática
+            new[]{ "tenda","cerca","fogueira","totem","poco","celeiro","choca","menir" },          // 7 Nômade
+            new[]{ "obelisco","altar","muro","forno","menir","poco","totem","cerca" },             // 8 Subterrânea
+            new[]{ "templo","obelisco","santuario","menir","poco","torre","altar","muro" },        // 9 Ordem
         };
 
         void VillageBuildings(Transform g, int ci, BuildingPal pal, float scale, bool large)
         {
-            string[] keys = ci switch
+            var pool  = _buildingPools[Mathf.Clamp(ci, 0, _buildingPools.Length - 1)];
+            var allSpots = large ? _spots8 : _spots5;
+
+            // Quantidade aleatória: 3-8 para aldeias grandes, 2-5 para pequenas
+            int count = large ? Random.Range(3, 9)   // 3..8
+                              : Random.Range(2, 6);  // 2..5
+
+            count = Mathf.Min(count, allSpots.Length);
+
+            // Embaralha os spots para variar quais são usados quando count < max
+            var spotIdx = new int[allSpots.Length];
+            for (int i = 0; i < allSpots.Length; i++) spotIdx[i] = i;
+            for (int i = allSpots.Length - 1; i > 0; i--)
+                { int j = Random.Range(0, i+1); int tmp = spotIdx[i]; spotIdx[i] = spotIdx[j]; spotIdx[j] = tmp; }
+
+            float[] scaleW = { 0.96f, 0.88f, 0.85f, 0.80f, 0.78f, 0.74f, 0.70f, 0.68f };
+
+            for (int i = 0; i < count; i++)
             {
-                0 => new[]{ "choca","totem","casa_madeira","celeiro","poco","forno" },
-                1 => new[]{ "forno","obelisco","choca","muro","poco","celeiro" },
-                2 => new[]{ "castelo","torre","igreja","muralha","poco","celeiro" },
-                3 => new[]{ "templo","altar","menir","santuario","poco","torre" },
-                4 => new[]{ "templo","obelisco","torre","celeiro","poco","forno" },
-                5 => new[]{ "torre","muro","celeiro","poco","farol","barco" },
-                6 => new[]{ "doca","farol","barco","poco","celeiro","choca" },
-                7 => new[]{ "tenda","cerca","fogueira","totem","poco","celeiro" },
-                8 => new[]{ "obelisco","altar","muro","forno","menir","poco" },
-                9 => new[]{ "templo","obelisco","santuario","menir","poco","torre" },
-                _ => new[]{ "casa_madeira","celeiro","poco","forno","choca","totem" }
-            };
-            var spots = large ? _spots6 : _spots4;
-            float[] scales = { 0.95f, 0.85f, 0.85f, 0.78f, 0.78f, 0.72f };
-            for (int i = 0; i < spots.Length; i++)
-            {
-                var sp = spots[i];
-                var root = new GameObject(keys[i]).transform; root.SetParent(g, false);
-                // posição horizontal + Y snapped ao terreno (evita flutuar)
+                // Escolhe a construção: segue a ordem do pool mas pode pular com 15% de chance
+                string key = pool[i % pool.Length];
+                if (Random.value < 0.15f && pool.Length > count)
+                    key = pool[(i + Random.Range(1, pool.Length)) % pool.Length];
+
+                var sp   = allSpots[spotIdx[i]];
+                var root = new GameObject(key).transform; root.SetParent(g, false);
                 float wx = g.position.x + sp.x * scale;
                 float wz = g.position.z + sp.y * scale;
                 root.position = new Vector3(wx, TerrainY(wx, wz), wz);
                 root.Rotate(0, Random.value * 360f, 0);
-                float s = scale * scales[i];
-                BuildingBuilder.BuildByKey(keys[i], root, pal, s);
+                float s = scale * scaleW[Mathf.Min(i, scaleW.Length-1)];
+                BuildingBuilder.BuildByKey(key, root, pal, s);
                 AddBuildingCollider(root, s*2.5f, s*3.5f, s*2.5f);
             }
         }
@@ -490,9 +718,11 @@ namespace Genese.Nucleo
                 for (int side = 0; side < 4; side++)
                 {
                     float a = side * Mathf.PI * 0.5f;
+                    float wwx = g.position.x + Mathf.Cos(a) * radius * 0.85f;
+                    float wwz = g.position.z + Mathf.Sin(a) * radius * 0.85f;
                     var wr = new GameObject("muro_w").transform; wr.SetParent(g, false);
-                    wr.localPosition = new Vector3(Mathf.Cos(a)*radius*0.85f, 0, Mathf.Sin(a)*radius*0.85f);
-                    wr.localEulerAngles = new Vector3(0, a*Mathf.Rad2Deg+90, 0);
+                    wr.position = new Vector3(wwx, TerrainY(wwx, wwz), wwz);
+                    wr.eulerAngles = new Vector3(0, a*Mathf.Rad2Deg+90, 0);
                     BuildingBuilder.Muro(wr, pal, scale * 0.7f);
                 }
             }

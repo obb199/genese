@@ -31,7 +31,7 @@ namespace Genese.Core.Tests
                 $"Estágio ainda Gestual após 2500 ticks (pop={sim.Pop.Count})");
         }
 
-        // --- M09: Meme de Figura tem prevalência real após N ticks ---
+        // --- M09: Symbol de Figura tem prevalência real após N ticks ---
         [Fact]
         public void Meme_SpawnedByFigure_GainsPrevalence()
         {
@@ -76,7 +76,7 @@ namespace Genese.Core.Tests
             Assert.Equal(a.Pop.Language.Stage,         b.Pop.Language.Stage);
             Assert.Equal(a.Pop.Language.Lexicon.Count, b.Pop.Language.Lexicon.Count);
             Assert.Equal(a.Pop.Language.DriftCount,    b.Pop.Language.DriftCount);
-            Assert.Equal(a.Pop.Culture.MemeCount,      b.Pop.Culture.MemeCount);
+            Assert.Equal(a.Pop.Culture.SymbolCount,      b.Pop.Culture.SymbolCount);
             Assert.Equal(a.Pop.Belief.Stage,           b.Pop.Belief.Stage);
             Assert.Equal(a.Snapshot(),                 b.Snapshot());
 
