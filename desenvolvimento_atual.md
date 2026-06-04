@@ -185,9 +185,84 @@ Implementa M03 no `Genese.Core` — o motor evolutivo completo:
   · genomas opostos bloqueados · alta pressão → descendência mais divergente · determinismo (mesma
   semente ⇒ mesmo padrão de especiação + snapshot idêntico).
 
-## ▶️ Próxima etapa — E07: Camada Simbólica (M08–M10)
+## ✅ E07 — Camada Simbólica (CONCLUÍDA — 6 testes; 40/40 no total)
 
-Comunicação/linguagem, cultura e religião emergentes das interações coletivas.
+Implementa M08/M09/M10 no `Genese.Core` — a civilização ganha voz, valores e fé emergentes:
+- **`Language.cs`** (M08): inventário fonêmico único por população (7-10 fonemas), léxico procedural
+  (pares significado→forma gerados a partir do inventário), **5 estágios causais** desbloqueados por
+  pré-condições de estado (Gestual→Vocal→Proto→Gramática→Escrita — nunca por tempo ou sorteio),
+  **deriva fonológica** causal (palavras pouco usadas derivam com o `DriftCount`), distância
+  linguística entre populações (fonêmica + lexical — espelha a distância genômica de M03).
+- **`Culture.cs`** (M09): pool de **memes** (`Valor/Tabu/Mito/Arte/Rito`) com força, rigidez e
+  prevalência; nascem de **Figuras** ou eventos (nunca espontâneos); **propagação por imitação**
+  proporcional ao prestígio das Figuras; competição por atenção (soma por tipo ≤ 1.5); **lente
+  interpretativa** = argmax de força × prevalência (nunca sorteio); **coesão cultural** mede
+  concentração das prevalências; cisma implícito em coesão baixa.
+- **`Belief.cs`** (M10): 5 dimensões (fervor, dogmatismo, organização, estágio, imagem do jogador);
+  **4 estágios causais** (Animismo→Politeísmo→Monoteísmo→Transcendente); **imagem do jogador**
+  derivada do histórico circular de 20 nudges (Benevolente/Hostil/Trickster/Adormecido/Neutro);
+  **fervor realimenta Atenção** do jogador em +30% do bônus (M12).
+- **Integração na `Population`**: Language/Culture/Belief inicializados em `Seed()` com sub-stream
+  `Streams.Symbol = 8`; passo da língua a cada 30 ticks, propagação cultural a cada 20, crença a cada
+  40; **Figuras criam memes de Valor/Rito** a cada 50 ticks quando presentes; nudges registram
+  resultado na imagem do jogador via `Belief.RecordNudge()`.
+- **`SnapshotVersion = 6`** — Language + Culture + Belief totalmente serializados.
+- **+6 testes → 40/40 verdes** (`SymbolicTests.cs`): léxico cresce, estágio avança por pré-condição,
+  meme/coesão em faixa válida, imagem Benevolente após nudges bons, imagem Hostil após nudges maus,
+  determinismo + snapshot round-trip da camada simbólica.
+- **Lab** ganhou **seção 11** (inventário fonêmico, léxico, memes ativos, fervor, imagem do jogador).
+- **DLL** reconstruída e copiada para `unity/Genese/Assets/Plugins/Genese.Core.dll`.
+
+**Extras Unity (na mesma entrega):**
+- **Mapa dual-bioma**: `Environment.Generate` agora aceita `tempBias2/umidBias2`; `CoreSim` expõe
+  `ClimateIndex2/ClimateName2/CycleClimate2()` — a metade esquerda e direita do mapa têm climas
+  independentes com transição suave em 20% central (smoothstep).
+- **Ciclo dia/noite contínuo**: `CoreDayNight` refatorado com **8 keyframes** em fase [0,1) e
+  interpolação SmoothStep entre eles — zero descontinuidades em qualquer transição de fase.
+- **HUD atualizado**: linha de status por língua (`Stage/léxico/deriva`), cultura (`memes/coesão`) e
+  religião (`Stage/fervor/imagem`); controle `Clima N:` + `Clima S:` separados; inspeção de célula
+  mostra fervor/coesão/organização e meme dominante; Atenção máxima sobe com o fervor (M12).
+
+## ✅ E08 — Mundo & Eventos (CONCLUÍDA — 7 testes; 47/47 no total)
+
+Implementa M11/M14 no `Genese.Core` — múltiplas civilizações com identidade própria, rodando as
+**mesmas regras M01-M10** (sem IA roteirizada), mais eventos causais detonados por limiares:
+
+- **`CivRelation.cs`** (M11 §4.3): `CivStance` (Desconhecida → PrimeiroContato → Cautelosa →
+  Comercial → Aliada → Guerra → Vassalagem), `Trust`, `Resentment`, `TradeCount`/`WarCount` —
+  evolui pelo histórico, nunca por evento aleatório.
+- **`Civilization.cs`** (M11 §2): encapsula `Population` + território de origem + `Relations` com
+  outras civs. `ContactAffinity(a, b)` = parentesco genético (M03) × inteligibilidade linguística
+  (M08) × compatibilidade cultural (M09/M10) — sem tabela fixa.
+- **`ContactSystem.cs`** (M11 §4.1-4.2): detecta pares de criaturas dentro de `ContactRadius=5`;
+  escolhe ação por **argmax de scores** (guerra/comércio/troca cultural, calculados de traços +
+  recursos + histórico); `DoTrade`/`DoConflict`/`DoCultureExchange`/`DoFusionStep`. `UpdateStance`
+  deriva a stance do histórico de confiança/resentimento.
+- **`EventSystem.cs`** (M14): situações latentes ativam por **limiar de estado** (nunca por tick/chance);
+  resolvem pelo argmax de compatibilidade estado/cultura — **mesma seca, resolução diferente** em
+  culturas com imagens de jogador opostas. 7 tipos: Seca, Fome, ColapsoPop, GuerraDeclarada,
+  Transcendência, Expansão, Fusão. Log rastreável (base da Crônica, M13).
+- **`Simulation.cs`** refatorado: `List<Civilization> Civs` (padrão 2); `Pop` é atalho para
+  `Civs[0].Pop` (backward compat). Cada civ tem RNGs independentes `_civDec[i]`/`_civMut[i]`
+  (offsets 0x100×i). `ContactSystem.CheckAndInteract` corre a cada 10 ticks; `EventSystem.Step`
+  a cada 30 ticks. `SnapshotVersion = 7`.
+- **Bug de determinismo corrigido**: `Language.Step` usava `Lexicon.Keys` sem sort para seleção
+  de derive — Dictionary muda ordem interna após restore → sort explícito garante bit-a-bit idêntico.
+  Mesmo padrão aplicado a `Culture.Propagate` (defensivo).
+- **+7 testes → 47/47 verdes** (`CivTests.cs`): civs em metades separadas, backward compat Pop,
+  contato detectado por proximidade, interação produz trust/comércio/guerra, seca ativa por limiar,
+  mesmo gatilho→resolução diferente por cultura, determinismo + snapshot round-trip multi-civ.
+- **Lab** ganhou **seção 12** (civs, relações, eventos, Crônica).
+- **DLL** recompilada e copiada.
+
+**Unity (E08):**
+- **CoreCreatureView**: itera todas as civs; criaturas da Civ 1 têm tint laranja, Civ 2 roxo, etc.
+- **CoreHud**: painel esquerdo com lista de civs, relações (stance/trust/resentimento), eventos
+  activos e últimos 3 eventos resolvidos (Crônica).
+
+## ▶️ Próxima etapa — E09: Influência & Apresentação (M12/M13)
+
+Atenção aprofundada, nudges com consequências culturais/religiosas, Crônica visual, observação.
 Roadmap em [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -206,8 +281,8 @@ Roadmap em [ROADMAP.md](ROADMAP.md).
 - [ ] Trocar **bioma/cultura** regenera tudo; achar **marco** (vulcão…) e **rio** (~40%); **nudges**/dia-noite.
 
 ### C) Núcleo C# (lógica) — sem Unity
-- [ ] `dotnet test Genese.Core.Tests/Genese.Core.Tests.csproj` → **34 passed**.
-- [ ] `dotnet run --project Genese.Lab -- 12345 300 0.4` → laboratório imprime genoma, herança, deriva, mapa de biomas, **agentes vivos**, **(seção 9) comportamento coletivo** e **(seção 10) especiação** (linhagens/pressão/distância genômica).
+- [ ] `dotnet test Genese.Core.Tests/Genese.Core.Tests.csproj` → **40 passed**.
+- [ ] `dotnet run --project Genese.Lab -- 12345 300 0.4` → laboratório imprime genoma, herança, deriva, mapa de biomas, **agentes vivos**, **(seção 9) comportamento coletivo**, **(seção 10) especiação** e **(seção 11) camada simbólica** (língua/cultura/religião).
 
 > **Guia completo para testar tudo e propor melhorias:** [GUIA_DE_TESTES.md](GUIA_DE_TESTES.md).
 

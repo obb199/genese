@@ -43,44 +43,57 @@ namespace Genese.Nucleo
         };
 
         public CG.Simulation Sim { get; private set; }
-        public int WorldVersion    { get; private set; }
-        public int ClimateIndex    { get; private set; }
-        public int CultureIndex    { get; private set; }
-        public int FantasyThemeIndex { get; private set; }
+        public int WorldVersion       { get; private set; }
+        public int ClimateIndex       { get; private set; }
+        public int ClimateIndex2      { get; private set; }  // polo direito (x >= W/2)
+        public int CultureIndex       { get; private set; }  // polo esquerdo
+        public int CultureIndex2      { get; private set; }  // polo direito
+        public int FantasyThemeIndex  { get; private set; }  // polo esquerdo
+        public int FantasyThemeIndex2 { get; private set; }  // polo direito
 
         float _acc;
 
-        void Awake() => NewWorld(); // primeiro mundo já é aleatório
+        void Awake() => NewWorld();
 
         void BuildWorld()
         {
-            var cl = Climates[ClimateIndex];
-            Sim = new CG.Simulation((ulong)seed, width, height, initialCreatures, cl.t, cl.u);
+            var cl1 = Climates[ClimateIndex];
+            var cl2 = Climates[ClimateIndex2];
+            Sim = new CG.Simulation((ulong)seed, width, height, initialCreatures,
+                                    cl1.t, cl1.u, cl2.t, cl2.u);
             Sim.Pop.Cap = popCap;
             WorldVersion++;
         }
 
         /// <summary>
-        /// Gera um novo mundo completamente aleatório: nova semente, clima,
-        /// cultura e bioma fantástico escolhidos ao acaso — tudo do zero.
+        /// Gera um novo mundo aleatório: cada polo recebe clima, bioma fantástico e cultura próprios.
         /// </summary>
         public void NewWorld()
         {
             seed++;
             var rng = new System.Random(seed);
-            ClimateIndex      = rng.Next(0, Climates.Length);
-            CultureIndex      = rng.Next(0, CultureNames.Length);
-            FantasyThemeIndex = rng.Next(0, FantasyThemeNames.Length);
+            ClimateIndex       = rng.Next(0, Climates.Length);
+            ClimateIndex2      = rng.Next(0, Climates.Length);
+            CultureIndex       = rng.Next(0, CultureNames.Length);
+            CultureIndex2      = rng.Next(0, CultureNames.Length);
+            FantasyThemeIndex  = rng.Next(0, FantasyThemeNames.Length);
+            FantasyThemeIndex2 = rng.Next(0, FantasyThemeNames.Length);
             BuildWorld();
         }
 
-        public void CycleClimate(int d)      { ClimateIndex      = (ClimateIndex      + d + Climates.Length)          % Climates.Length;          BuildWorld(); }
-        public void CycleCulture(int d)      { CultureIndex      = (CultureIndex      + d + CultureNames.Length)      % CultureNames.Length;      WorldVersion++; }
-        public void CycleFantasyTheme(int d) { FantasyThemeIndex = (FantasyThemeIndex + d + FantasyThemeNames.Length) % FantasyThemeNames.Length; WorldVersion++; }
+        public void CycleClimate(int d)       { ClimateIndex       = (ClimateIndex       + d + Climates.Length)          % Climates.Length;          BuildWorld(); }
+        public void CycleClimate2(int d)      { ClimateIndex2      = (ClimateIndex2      + d + Climates.Length)          % Climates.Length;          BuildWorld(); }
+        public void CycleCulture(int d)       { CultureIndex       = (CultureIndex       + d + CultureNames.Length)      % CultureNames.Length;      WorldVersion++; }
+        public void CycleCulture2(int d)      { CultureIndex2      = (CultureIndex2      + d + CultureNames.Length)      % CultureNames.Length;      WorldVersion++; }
+        public void CycleFantasyTheme(int d)  { FantasyThemeIndex  = (FantasyThemeIndex  + d + FantasyThemeNames.Length) % FantasyThemeNames.Length; WorldVersion++; }
+        public void CycleFantasyTheme2(int d) { FantasyThemeIndex2 = (FantasyThemeIndex2 + d + FantasyThemeNames.Length) % FantasyThemeNames.Length; WorldVersion++; }
 
-        public string ClimateName     => Climates[ClimateIndex].name;
-        public string CultureName     => CultureNames[CultureIndex];
-        public string FantasyThemeName=> FantasyThemeNames[FantasyThemeIndex];
+        public string ClimateName       => Climates[ClimateIndex].name;
+        public string ClimateName2      => Climates[ClimateIndex2].name;
+        public string CultureName       => CultureNames[CultureIndex];
+        public string CultureName2      => CultureNames[CultureIndex2];
+        public string FantasyThemeName  => FantasyThemeNames[FantasyThemeIndex];
+        public string FantasyThemeName2 => FantasyThemeNames[FantasyThemeIndex2];
 
         void Update()
         {

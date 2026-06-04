@@ -93,5 +93,7 @@ namespace Genese.Core
         public const ulong Culture = 5;
         public const ulong Events = 6;
         public const ulong Spawn = 7;
+        public const ulong Symbol  = 8;  // E07: língua / cultura / religião
+        public const ulong Contact = 9;  // E08: ContactSystem inter-civ
     }
 }

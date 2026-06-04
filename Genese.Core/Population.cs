@@ -14,8 +14,16 @@ namespace Genese.Core
     public sealed class Population
     {
         public readonly List<Creature> Creatures = new();
-        public readonly Social Social = new();       // camada social emergente (E05/M05)
-        public readonly Speciation Spec = new();     // motor evolutivo (E06/M03)
+        public readonly Social     Social = new();   // camada social emergente (E05/M05)
+        public readonly Speciation Spec   = new();   // motor evolutivo (E06/M03)
+        // Camada simbólica (E07/M08-M10): inicializada em Seed()
+#pragma warning disable CS8618
+        public Language Language { get; private set; }
+        public Culture  Culture  { get; private set; }
+        public Belief   Belief   { get; private set; }
+        private Rng _symbol;
+#pragma warning restore CS8618
+
         public int Cap = 1500;
         private int _nextId;
         private int _nextLinId = 1;  // 0 = linhagem original; >0 = novas linhagens híbridas (M03)
@@ -27,14 +35,26 @@ namespace Genese.Core
             get { int n = 0; for (int i = 0; i < Creatures.Count; i++) if (Creatures[i].Alive) n++; return n; }
         }
 
-        public void Seed(Environment env, Rng rng, int n)
+        /// <param name="xMin">Limite esquerdo da faixa de spawn (inclusivo).</param>
+        /// <param name="xMax">Limite direito da faixa de spawn (exclusivo; -1 = env.W).</param>
+        public void Seed(Environment env, Rng rng, int n, Rng symbolRng = null, int xMin = 0, int xMax = -1)
         {
-            const float minDist = 10f;  // espaçamento mínimo entre indivíduos no spawn (evita sobreposição visual)
+            // Camada simbólica: inicializa com sub-stream dedicado (ou derivado do spawn rng)
+            _symbol  = symbolRng ?? rng.Fork(0xCE17_B001UL);
+            Language = new Language(_symbol);
+            Culture  = new Culture();
+            Belief   = new Belief();
+
+            if (xMax < 0) xMax = env.W;
+            int bandW = Math.Max(1, xMax - xMin);
+            // minDist proporcional à faixa disponível (evita deadlock em mapas estreitos)
+            float minDist = Math.Min(10f, bandW * 0.35f);
+
             int tries = 0;
-            while (Creatures.Count < n && tries < n * 120)
+            while (Creatures.Count < n && tries < n * 160)
             {
                 tries++;
-                int x = rng.Range(0, env.W), y = rng.Range(0, env.H);
+                int x = rng.Range(xMin, xMax), y = rng.Range(0, env.H);
                 if (env.IsBarrier(x, y)) continue;
                 float fx = x + 0.5f, fy = y + 0.5f;
                 bool tooClose = false;
@@ -81,8 +101,37 @@ namespace Genese.Core
                 // prestígio também esmaece: reflete posição RECENTE, não soma vitalícia —
                 // por isso Figuras permanecem RARAS (só quem sustenta vitórias/reprodução).
                 for (int i = 0; i < Creatures.Count; i++) Creatures[i].Prestige *= 0.94f;
+                // cultura: propagação de memes (cadência igual ao esquecimento social)
+                Culture.Propagate(Creatures, Social, _symbol);
             }
             if (tick % 25 == 0) { Social.DetectGroups(Creatures); Social.UpdateFigures(Creatures); }
+
+            // Camada simbólica (E07/M08-M10): língua, religião, memes de Figuras
+            if (tick % 30 == 0)
+                Language.Step(Count, Social.GroupCount, Social.FigureCount, tick, _symbol);
+            if (tick % 40 == 0)
+                Belief.Step(Count, Social.GroupCount, Social.FigureCount, _symbol);
+            if (tick % 50 == 0 && Social.FigureCount > 0)
+                SpawnCulturalMemes();
+        }
+
+        /// <summary>
+        /// Figuras criam memes de forma causal (M09 §4.1): líderes geram Valores,
+        /// parentais geram Ritos — nunca espontâneos.
+        /// </summary>
+        void SpawnCulturalMemes()
+        {
+            for (int i = 0; i < Creatures.Count; i++)
+            {
+                var c = Creatures[i];
+                if (!c.IsFigure || !c.Alive) continue;
+                if (Culture.MemeCount >= 12) break; // limite de atenção coletiva
+                string role = c.Role();
+                if (role == "Líder" && c.Trait("comp.lideranca") > 0.65f)
+                    Culture.SpawnMeme(MemeType.Valor, 0.25f + 0.45f * c.Trait("comp.lideranca"), c.Id, _symbol);
+                else if (role == "Parental")
+                    Culture.SpawnMeme(MemeType.Rito, 0.20f + 0.40f * c.Trait("comp.invParental"), c.Id, _symbol);
+            }
         }
 
         // vizinho vivo mais próximo de cada criatura (para a ação de aproximar/bando)
@@ -236,6 +285,11 @@ namespace Genese.Core
             }
             Social.Write(w);
             Spec.Write(w);
+            // Camada simbólica (E07)
+            _symbol.WriteState(w);
+            Language.Write(w);
+            Culture.Write(w);
+            Belief.Write(w);
         }
         public void ReadInto(BinaryReader r)
         {
@@ -252,6 +306,11 @@ namespace Genese.Core
             }
             Social.ReadInto(r);
             Spec.ReadInto(r);
+            // Camada simbólica (E07)
+            _symbol  = Rng.ReadState(r);
+            Language = Language.Read(r);
+            Culture  = new Culture(); Culture.ReadInto(r);
+            Belief   = new Belief();  Belief.ReadInto(r);
         }
     }
 }

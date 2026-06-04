@@ -177,9 +177,57 @@ Console.WriteLine($"Pressão mutagênica média habitat: {pressMedia:0.00}   · 
                   $"fatorPop (N={sim.Pop.Count}): {Genese.Core.Speciation.FatorTamanhoPop(sim.Pop.Count):0.00}");
 Console.WriteLine("(especiação emerge: dist genômica > limiar fértil → cisão de linhagem irreversível)");
 
+// ---------------------------------------------------------------------------
+Title("11) E07 — Camada Simbólica: língua, cultura e religião emergentes");
+Console.WriteLine($"Língua: estágio={sim.Pop.Language.Stage}  ·  fonemas={sim.Pop.Language.Phonemes.Length}  ·  léxico={sim.Pop.Language.Lexicon.Count} palavras  ·  deriva={sim.Pop.Language.DriftCount}");
+if (sim.Pop.Language.Lexicon.Count > 0)
+{
+    Console.Write("  Palavras: ");
+    int shown = 0;
+    foreach (var kv in sim.Pop.Language.Lexicon) { Console.Write($"{kv.Key}='{kv.Value}'  "); if (++shown >= 8) break; }
+    Console.WriteLine();
+}
+Console.WriteLine($"Cultura: memes={sim.Pop.Culture.MemeCount}  ·  coesão={sim.Pop.Culture.CulturalCohesion:0.00}");
+foreach (var kv in sim.Pop.Culture.Pool)
+    Console.WriteLine($"  [{kv.Value.Type}] força={kv.Value.Force:0.00}  prevalência={kv.Value.Prevalence:0.00}  rigidez={kv.Value.Rigidity:0.00}  origem=#{kv.Value.OriginId}");
+if (sim.Pop.Culture.Pool.Count == 0) Console.WriteLine("  (nenhum meme activo — figuras ainda não emergiram ou pool vazio)");
+Console.WriteLine($"Religião: estágio={sim.Pop.Belief.Stage}  ·  fervor={sim.Pop.Belief.Fervor:0.00}  ·  dogmatismo={sim.Pop.Belief.Dogmatism:0.00}  ·  organização={sim.Pop.Belief.Organization:0.00}");
+Console.WriteLine($"  Imagem do jogador: {sim.Pop.Belief.Image}  (baseada no histórico de nudges)");
+Console.WriteLine("(língua: invntário fonêmico único por civilização; cultura: memes de Figuras; religião: fervor→Atenção)");
+
+// ---------------------------------------------------------------------------
+Title("12) E08 — Múltiplas Civilizações (M11) e Eventos Causais (M14)");
+Console.WriteLine($"Civilizações: {sim.Civs.Count}");
+for (int ci = 0; ci < sim.Civs.Count; ci++)
+{
+    var civ = sim.Civs[ci];
+    Console.WriteLine($"  Civ {ci}: pop={civ.Pop.Count} · língua={civ.Pop.Language.Stage} · " +
+                      $"religião={civ.Pop.Belief.Stage} · memes={civ.Pop.Culture.MemeCount}");
+    if (civ.Relations.Count > 0)
+    {
+        foreach (var kv in civ.Relations)
+        {
+            var r = kv.Value;
+            Console.WriteLine($"    ↔ Civ {kv.Key}: stance={r.Stance} trust={r.Trust:0.00} resentimento={r.Resentment:0.00} " +
+                              $"comércio={r.TradeCount} guerras={r.WarCount}");
+        }
+    }
+    else Console.WriteLine("    (sem contatos registados)");
+}
+Console.WriteLine($"Eventos totais (Crônica): {sim.Events.TotalEvents}");
+foreach (var ev in sim.Events.Log.GetRange(0, Math.Min(5, sim.Events.Log.Count)))
+    Console.WriteLine($"  tick {ev.Tick,6}: [{ev.Type}] {ev.Resolution}");
+if (sim.Events.Active.Count > 0)
+{
+    Console.WriteLine($"Eventos activos ({sim.Events.Active.Count}):");
+    foreach (var ev in sim.Events.Active)
+        Console.WriteLine($"  [{ev.Type}] civ {ev.CivId} desde tick {ev.Tick}");
+}
+Console.WriteLine("(civilizações correm as mesmas regras M01-M10 — sem IA roteirizada; interação por estado)");
+
 Console.WriteLine();
 Console.WriteLine("Fim. Edite os parâmetros (seed/gerações/pressão) e rode de novo para comparar.");
-Console.WriteLine("Onde mexer: Genes/Reproduction (genoma) · Environment (mundo) · Population (agentes/decisão).");
+Console.WriteLine("Onde mexer: ContactSystem/EventSystem (inter-civ) · Language/Culture/Belief (simbólico) · Environment (mundo).");
 
 // ============================ helpers ============================
 static void Title(string t)

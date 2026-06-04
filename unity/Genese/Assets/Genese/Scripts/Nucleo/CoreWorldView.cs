@@ -56,14 +56,28 @@ namespace Genese.Nucleo
             new FantasyTheme("#3A3052","#1A1430","#2C2444","#1E1834","#6E5A8A","#5FA0B0","#8C5BAA","#5A5274","#E0C46A",true),
             new FantasyTheme("#6A5C7E","#2C2236","#3E3448","#2E2638","#8A8296","#A89AC0","#C4B8DA","#6A6276","#7DD8E0")
         };
-        int ActiveTheme => (sim != null && sim.FantasyThemeIndex > 0 && sim.FantasyThemeIndex < _themes.Length) ? sim.FantasyThemeIndex : 0;
+        // Polo esquerdo (x < W/2) usa índice 1; polo direito usa índice 2.
+        // Retorna 0 = "Clássico" se índice inválido.
+        int ThemeAt(int cellX)
+        {
+            if (sim == null || _env == null) return 0;
+            int idx = cellX < _env.W / 2 ? sim.FantasyThemeIndex : sim.FantasyThemeIndex2;
+            return (idx > 0 && idx < _themes.Length) ? idx : 0;
+        }
+        int CultureAt(int cellX)
+        {
+            if (sim == null) return 0;
+            return cellX < (_env != null ? _env.W / 2 : 64) ? sim.CultureIndex : sim.CultureIndex2;
+        }
+        // Compatibilidade: tema do polo esquerdo (usado por BuildTerrain atmosfera global)
+        int ActiveTheme => ThemeAt(0);
 
         // ================================================================
-        //  CORES DE BIOMA — transição gradual por kernel 5×5 pesado
+        //  CORES DE BIOMA — cada polo usa seu próprio tema fantástico
         // ================================================================
-        Color BiomeBaseColor(CG.Biome b)
+        Color BiomeBaseColor(CG.Biome b, int t)
         {
-            int t = ActiveTheme; if (t > 0) return _themes[t].ground;
+            if (t > 0) return _themes[t].ground;
             switch (b)
             {
                 case CG.Biome.Oceano:   return Hex("#2E6F8C");
@@ -77,9 +91,10 @@ namespace Genese.Nucleo
                 default: return Color.magenta;
             }
         }
-        Color FoliageColor(CG.Biome b)
+        Color FoliageColor(CG.Biome b, int cellX = -1)
         {
-            int t = ActiveTheme; if (t > 0) return _themes[t].foliage;
+            int t = cellX >= 0 ? ThemeAt(cellX) : ActiveTheme;
+            if (t > 0) return _themes[t].foliage;
             switch (b)
             {
                 case CG.Biome.Floresta: return Hex("#2F6F62");
@@ -92,10 +107,10 @@ namespace Genese.Nucleo
             }
         }
 
-        // Kernel gaussiano 5×5 — transições naturais entre biomas vizinhos
+        // Kernel gaussiano 5×5 — transição natural entre biomas; cada polo usa seu tema
         Color BlendedColor(int x, int y)
         {
-            int t = ActiveTheme;
+            int t = ThemeAt(x);
             int W = _env.W, H = _env.H;
             if (t > 0)
             {
@@ -119,10 +134,10 @@ namespace Genese.Nucleo
                 {
                     int nx = Mathf.Clamp(x+dx,0,W-1), ny = Mathf.Clamp(y+dy,0,H-1);
                     float ww = w[dy+2, dx+2];
-                    sum += BiomeBaseColor((CG.Biome)_env.Bioma[ny * W + nx]) * ww;
+                    // usa o tema da célula vizinha para transição de cor suave entre polos
+                    sum += BiomeBaseColor((CG.Biome)_env.Bioma[ny * W + nx], ThemeAt(nx)) * ww;
                     total += ww;
                 }
-            // altitude tinge o resultado: picos ficam mais brancos/pedregosos
             Color result = sum / total;
             float a = _env.Altitude[y * W + x];
             if (a > CG.Environment.MountainAlt)
@@ -136,7 +151,7 @@ namespace Genese.Nucleo
             if (sim == null || sim.Sim == null) return;
             if (sim.WorldVersion != _builtVersion) { Rebuild(); return; }
             _refresh += Time.deltaTime;
-            if (_refresh > 0.55f && _mesh != null) { _refresh = 0f; RefreshMesh(); }
+            if (_refresh > 2.5f && _mesh != null) { _refresh = 0f; RefreshMesh(); } // refresh mais espaçado
         }
 
         void Rebuild()
@@ -224,8 +239,9 @@ namespace Genese.Nucleo
         // ================================================================
         void Decorate()
         {
-            int t = ActiveTheme, W = _env.W, H = _env.H;
-            int trees=0, rocks=0, grass=0, fantasy=0;
+            int W = _env.W, H = _env.H;
+            int treesL=0, rocksL=0, fantasyL=0; // polo esquerdo
+            int treesR=0, rocksR=0, fantasyR=0; // polo direito
             for (int y = 1; y < H-1; y++)
                 for (int x = 1; x < W-1; x++)
                 {
@@ -234,14 +250,18 @@ namespace Genese.Nucleo
                     if (b == CG.Biome.Oceano || _env.Altitude[i] < CG.Environment.SeaLevel) continue;
                     var pos = WorldPos(x + Random.Range(-0.4f, 0.4f), y + Random.Range(-0.4f, 0.4f));
 
+                    int t = ThemeAt(x);
+                    bool left = x < W / 2;
+                    ref int fantasy = ref (left ? ref fantasyL : ref fantasyR);
+                    ref int trees   = ref (left ? ref treesL   : ref treesR);
+                    ref int rocks   = ref (left ? ref rocksL   : ref rocksR);
+
                     if (t > 0)
-                    { if (fantasy < 620 && Random.value < 0.05f) { FantasyProp(pos, t); fantasy++; } }
+                    { if (fantasy < 150 && Random.value < 0.02f) { FantasyProp(pos, t); fantasy++; } }
                     else
                     {
-                        if (trees < 480  && Random.value < TreeChance(b))     { Tree(pos, b); trees++; }
-                        else if (rocks < 240 && Random.value < RockChance(b)) { Rock(pos, b); rocks++; }
-                        else if (grass < 800 && b != CG.Biome.Deserto && b != CG.Biome.Montanha && Random.value < 0.13f)
-                            { Grass(pos, b); grass++; }
+                        if (trees < 180 && Random.value < TreeChance(b))      { Tree(pos, b, x); trees++; }
+                        else if (rocks < 90 && Random.value < RockChance(b))  { Rock(pos, b); rocks++; }
                     }
                 }
         }
@@ -253,14 +273,14 @@ namespace Genese.Nucleo
             (b == CG.Biome.Montanha || b == CG.Biome.Vulcanico) ? 0.12f : 0.032f;
 
         // ---- ÁRVORES por bioma ----
-        void Tree(Vector3 pos, CG.Biome b)
+        void Tree(Vector3 pos, CG.Biome b, int cellX = 0)
         {
             var root = new GameObject("arvore").transform;
             root.SetParent(transform, false); root.position = pos; root.Rotate(0, Random.value*360f, 0);
             float s = Random.Range(1.2f, 2.6f);
             var trunkMat = Prim.Mat(Hex("#6E5638"));
-            var fol = Prim.Mat(FoliageColor(b));
-            var darkFol = Prim.Mat(FoliageColor(b) * 0.82f);
+            var fol = Prim.Mat(FoliageColor(b, cellX));
+            var darkFol = Prim.Mat(FoliageColor(b, cellX) * 0.82f);
 
             if (b == CG.Biome.Deserto)
             {
@@ -355,24 +375,18 @@ namespace Genese.Nucleo
         // ================================================================
         void MultipleVillages()
         {
-            // aldeia principal (cultura selecionada) + até 2 aldeias secundárias com culturas distintas
             int W = _env.W, H = _env.H;
-            int ci = sim != null ? sim.CultureIndex : 0;
             var placed = new List<Vector2Int>();
 
-            // centro principal
-            Vector2Int main = FindLandCenter(W/2, H/2, 6, ref placed);
-            PlaceVillage(main.x, main.y, ci, large: true);
+            // Polo esquerdo: aldeia grande com CultureIndex
+            int ciL = sim != null ? sim.CultureIndex : 0;
+            Vector2Int posL = FindLandCenter(W/4, H/2, 6, ref placed);
+            PlaceVillage(posL.x, posL.y, ciL, large: true);
 
-            // 2 aldeias menores com culturas vizinhas
-            for (int v = 0; v < 2; v++)
-            {
-                int altCi = (ci + v + 1) % 10;
-                int tx = (v == 0) ? W/4  : 3*W/4;
-                int ty = (v == 0) ? 3*H/4 : H/4;
-                Vector2Int sec = FindLandCenter(tx, ty, 4, ref placed);
-                PlaceVillage(sec.x, sec.y, altCi, large: false);
-            }
+            // Polo direito: aldeia grande com CultureIndex2
+            int ciR = sim != null ? sim.CultureIndex2 : 0;
+            Vector2Int posR = FindLandCenter(3*W/4, H/2, 6, ref placed);
+            PlaceVillage(posR.x, posR.y, ciR, large: true);
         }
 
         Vector2Int FindLandCenter(int sx, int sy, int minSep, ref List<Vector2Int> placed)
@@ -558,17 +572,19 @@ namespace Genese.Nucleo
         // ================================================================
         void Landmarks()
         {
-            int t = ActiveTheme;
             var marcos = new GameObject("Marcos").transform; marcos.SetParent(transform, false);
-            var done = new HashSet<object>();
+            // Chave por (polo, tema/bioma): cada polo pode ter seus próprios marcos
+            var done = new HashSet<long>();
             int W = _env.W, H = _env.H;
-            for (int y = 5; y < H-5; y += 3)
-                for (int x = 5; x < W-5; x += 3)
+            for (int y = 5; y < H-5; y += 5)
+                for (int x = 5; x < W-5; x += 5)
                 {
                     int i = y*W+x;
                     var b = (CG.Biome)_env.Bioma[i];
                     if (b == CG.Biome.Oceano || _env.Altitude[i] < CG.Environment.SeaLevel) continue;
-                    object key = t>0?(object)t:(object)b;
+                    int t = ThemeAt(x);
+                    int pole = x < W / 2 ? 0 : 1;
+                    long key = (long)pole * 1000 + (t > 0 ? t : (int)b + 100);
                     if (done.Contains(key)) continue;
                     done.Add(key);
                     var pos = WorldPos(x, y);
@@ -593,7 +609,7 @@ namespace Genese.Nucleo
             switch (t)
             {
                 case 1: Cyl(root,Prim.Mat(th.trunk),0.7f,4.0f,new Vector3(0,4f,0)); var bC=Prim.Sphere(root,Prim.Mat(th.foliage)); bC.transform.localScale=new Vector3(6f,2.5f,6f); bC.transform.localPosition=new Vector3(0,8.5f,0); for (int k=0;k<10;k++) { float a=k/10f*Mathf.PI*2; var sp=Prim.Sphere(root,Prim.Mat(th.accent)); sp.transform.localScale=Vector3.one*0.5f; sp.transform.localPosition=new Vector3(Mathf.Cos(a)*2.8f,9.0f,Mathf.Sin(a)*2.8f); } break;
-                case 2: Crystal(root,th.foliage,th.foliage2,th.accent,4.5f); break;
+                case 2: FantasyPropBuilder.Build(2, root, th.foliage, th.foliage2, th.rock, th.accent, th.trunk, 4.5f); break;
                 case 3: Cyl(root,Prim.Mat(th.trunk,Prim.Finish.Metallic),0.65f,4.5f,new Vector3(0,4.5f,0)); for (int k=0;k<4;k++){float a=k*Mathf.PI*0.5f; var arm=Prim.Cylinder(root,Prim.Mat(th.accent,Prim.Finish.Metallic)); arm.transform.localScale=new Vector3(0.09f,1.35f,0.09f); arm.transform.localPosition=new Vector3(Mathf.Cos(a)*1.35f,5.5f,Mathf.Sin(a)*1.35f); arm.transform.localEulerAngles=new Vector3(0,a*Mathf.Rad2Deg,90);} var orb2=Prim.Sphere(root,Prim.Mat(th.accent,Prim.Finish.Satin,th.accent,2.0f)); orb2.transform.localScale=Vector3.one*1.1f; orb2.transform.localPosition=new Vector3(0,9.5f,0); break;
                 case 4: var wha=Prim.Sphere(root,Prim.Mat(th.foliage)); wha.transform.localScale=new Vector3(4f,2f,7f); wha.transform.localPosition=new Vector3(0,5.5f,0); break;
                 case 5: Cyl(root,Prim.Mat(th.rock),0.55f,3.5f,new Vector3(0,3.5f,0)); for(int k=0;k<3;k++){float rr=(1.8f-k*0.45f); var ring=Prim.Cylinder(root,Prim.Mat(th.accent,Prim.Finish.Satin,th.accent,1.0f)); ring.transform.localScale=new Vector3(rr*2,0.14f,rr*2); ring.transform.localPosition=new Vector3(0,1.2f+k*1.6f,0);} break;
@@ -667,9 +683,14 @@ namespace Genese.Nucleo
             float ox=_env.W*0.5f, oz=_env.H*0.5f;
             gx=Mathf.Clamp(gx,0,_env.W-1.001f); gy=Mathf.Clamp(gy,0,_env.H-1.001f);
             int x0=(int)gx, y0=(int)gy; float fx=gx-x0, fy=gy-y0;
-            float top=Mathf.Lerp(Alt(x0,y0),Alt(x0+1,y0),fx);
-            float bot=Mathf.Lerp(Alt(x0,y0+1),Alt(x0+1,y0+1),fx);
-            return new Vector3((gx-ox)*cellSize, Mathf.Lerp(top,bot,fy)*heightScale, (gy-oz)*cellSize);
+            // Interpolação TRIANGULAR — casa com a topologia da mesh (2 triângulos por quad):
+            // T1: (x0,y0)+(x0,y0+1)+(x0+1,y0)  T2: (x0+1,y0)+(x0,y0+1)+(x0+1,y0+1)
+            float h;
+            if (fx + fy <= 1f)
+                h = (1f-fx-fy)*Alt(x0,y0) + fy*Alt(x0,y0+1) + fx*Alt(x0+1,y0);
+            else
+                h = (fx+fy-1f)*Alt(x0+1,y0+1) + (1f-fx)*Alt(x0,y0+1) + (1f-fy)*Alt(x0+1,y0);
+            return new Vector3((gx-ox)*cellSize, h*heightScale, (gy-oz)*cellSize);
         }
         public bool WorldToCell(Vector3 world, out int cx, out int cy)
         {

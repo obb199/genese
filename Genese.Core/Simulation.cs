@@ -1,54 +1,108 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Genese.Core
 {
     /// <summary>
-    /// Núcleo determinístico. Step() avança 1 tick: ambiente (E03) e agentes (E04) são
-    /// atualizados de forma causal. Cada subsistema tem um sub-stream de RNG PERSISTENTE
-    /// (criado uma vez, evolui ao longo do tempo, é serializado). Snapshot/Restore
-    /// reproduzem o estado bit a bit (saves, replays, GIF de evolução).
+    /// Núcleo determinístico (E08). Gerencia MÚLTIPLAS civilizações rodando as mesmas
+    /// regras (M01-M10) + ContactSystem inter-civ (M11) + EventSystem causal (M14).
+    ///
+    /// Cada civ tem seu próprio par de RNGs (decision/mutation), derivados da semente
+    /// com offsets de stream distintos — independência total entre civs.
+    /// Pop (compat. com código anterior) é atalho para Civs[0].Pop.
     /// </summary>
     public sealed class Simulation : ISimulation
     {
-        public const uint SnapshotVersion = 5; // E06: _nextLinId + Spec + LOD
+        public const uint SnapshotVersion = 7; // E08: Civilization list + EventSystem
 
-        private readonly WorldState _state;
-        private Rng _root, _decision, _mut;
+        private WorldState _state;
+        private Rng _root;
+        private Rng _contact;   // ContactSystem entre civs
+        private Rng _evRng;     // EventSystem
 
-        public Environment Env { get; private set; }
-        public Population Pop { get; private set; }
-        public ulong Tick => _state.Tick;
+        // RNGs por civ (paralelos à lista Civs)
+        private readonly List<Rng> _civDec = new();
+        private readonly List<Rng> _civMut = new();
+
+        public Environment   Env    { get; private set; }
+        public List<Civilization> Civs { get; private set; } = new();
+        public EventSystem   Events { get; private set; } = new();
+
+        /// <summary>Backward-compat: civilização do jogador (Civs[0].Pop).</summary>
+        public Population Pop => Civs.Count > 0 ? Civs[0].Pop : null;
+
+        public ulong     Tick  => _state.Tick;
         public WorldState State => _state;
-        public Rng Root => _root;
+        public Rng       Root  => _root;
 
-        /// <summary>Nível de detalhe de simulação (E06/M03 §2.3). Pleno por padrão.</summary>
         public SimLOD LOD { get; private set; } = SimLOD.Pleno;
         public void SetLOD(SimLOD lod) { LOD = lod; }
 
-        public Simulation(ulong seed, int width = 64, int height = 48, int initialCreatures = 40, float tempBias = 0f, float umidBias = 0f)
+        /// <param name="numCivs">Número de civilizações (padrão 2: cada uma em metade do mapa).</param>
+        public Simulation(ulong seed, int width = 64, int height = 48, int initialCreatures = 40,
+                          float tempBias = 0f, float umidBias = 0f,
+                          float tempBias2 = float.NaN, float umidBias2 = float.NaN,
+                          int numCivs = 2)
         {
             _state = new WorldState { Seed = seed, Tick = 0 };
-            _root = new Rng(seed);
-            _decision = _root.Fork(Streams.Decision);
-            _mut = _root.Fork(Streams.Mutation);
+            _root  = new Rng(seed);
 
             Env = new Environment(width, height);
-            Env.Generate(_root.Fork(Streams.Environment), tempBias, umidBias);
+            Env.Generate(_root.Fork(Streams.Environment), tempBias, umidBias, tempBias2, umidBias2);
 
-            Pop = new Population();
-            Pop.Seed(Env, _root.Fork(Streams.Spawn), initialCreatures);
+            _contact = _root.Fork(Streams.Contact);
+            _evRng   = _root.Fork(Streams.Events);
+
+            int perCiv = Math.Max(4, initialCreatures / Math.Max(1, numCivs));
+            for (int c = 0; c < numCivs; c++)
+            {
+                // Streams da civ c: offsets de 0x100*c para isolamento total
+                ulong off = (ulong)c * 0x100UL;
+                var dec = _root.Fork(Streams.Decision + off);
+                var mut = _root.Fork(Streams.Mutation + off);
+                var sym = _root.Fork(Streams.Symbol   + off);
+                var spw = _root.Fork(Streams.Spawn    + off);
+
+                // Faixa de spawn horizontal dividida por número de civs
+                int xMin = c * (width / numCivs);
+                int xMax = (c == numCivs - 1) ? width : (c + 1) * (width / numCivs);
+
+                var pop = new Population { Cap = Math.Max(30, initialCreatures) };
+                pop.Seed(Env, spw, perCiv, sym, xMin, xMax);
+
+                _civDec.Add(dec);
+                _civMut.Add(mut);
+
+                int sx = (xMin + xMax) / 2, sy = height / 2;
+                Civs.Add(new Civilization(c, pop, sx, sy));
+            }
+
+            Events = new EventSystem();
         }
 
         public void Step()
         {
-            // LOD (E06 §2.3): Dormente pula ticks; Agregado pula Social/Speciation
             if (LOD == SimLOD.Dormente && _state.Tick % 10 != 0) { _state.Tick++; return; }
 
             Env.Step(_state.Tick);
-            Pop.Step(Env, _state.Tick, _decision, _mut);
 
-            // Agregado: Social e detecção de espécies correm mais espaçados
-            if (LOD == SimLOD.Agregado && _state.Tick % 5 != 0) { _state.Tick++; return; }
+            // Cada civ avança com seus próprios RNGs (determinístico, isolado)
+            for (int i = 0; i < Civs.Count; i++)
+                Civs[i].Pop.Step(Env, _state.Tick, _civDec[i], _civMut[i]);
+
+            if (LOD != SimLOD.Agregado || _state.Tick % 5 == 0)
+            {
+                // Contato inter-civ (a cada 10 ticks)
+                if (_state.Tick % 10 == 0 && Civs.Count > 1)
+                    for (int i = 0; i < Civs.Count; i++)
+                        for (int j = i+1; j < Civs.Count; j++)
+                            ContactSystem.CheckAndInteract(Civs[i], Civs[j], Env, _state.Tick, _contact);
+
+                // Eventos causais (a cada 30 ticks)
+                if (_state.Tick % 30 == 0)
+                    Events.Step(Civs, Env, _state.Tick, _evRng);
+            }
 
             _state.Tick++;
         }
@@ -56,31 +110,44 @@ namespace Genese.Core
         public byte[] Snapshot()
         {
             using var ms = new MemoryStream();
-            using var w = new BinaryWriter(ms);
+            using var w  = new BinaryWriter(ms);
             w.Write(SnapshotVersion);
-            w.Write(_state.Seed);
-            w.Write(_state.Tick);
+            w.Write(_state.Seed); w.Write(_state.Tick);
+            w.Write((byte)LOD);
             Env.Write(w);
-            _decision.WriteState(w);
-            _mut.WriteState(w);
-            Pop.Write(w);
+            _contact.WriteState(w); _evRng.WriteState(w);
+            w.Write(Civs.Count);
+            for (int i = 0; i < Civs.Count; i++)
+            {
+                _civDec[i].WriteState(w);
+                _civMut[i].WriteState(w);
+                Civs[i].Write(w);
+            }
+            Events.Write(w);
             return ms.ToArray();
         }
 
         public void Restore(byte[] data)
         {
             using var ms = new MemoryStream(data);
-            using var r = new BinaryReader(ms);
+            using var r  = new BinaryReader(ms);
             uint version = r.ReadUInt32();
             if (version != SnapshotVersion)
                 throw new InvalidDataException($"Snapshot versão {version} incompatível com {SnapshotVersion}.");
-            _state.Seed = r.ReadUInt64();
-            _state.Tick = r.ReadUInt64();
-            _root = new Rng(_state.Seed);
-            Env = new Environment(1, 1); Env.ReadInto(r);
-            _decision = Rng.ReadState(r);
-            _mut = Rng.ReadState(r);
-            Pop = new Population(); Pop.ReadInto(r);
+            _state = new WorldState { Seed = r.ReadUInt64(), Tick = r.ReadUInt64() };
+            LOD    = (SimLOD)r.ReadByte();
+            _root  = new Rng(_state.Seed);
+            Env    = new Environment(1,1); Env.ReadInto(r);
+            _contact = Rng.ReadState(r); _evRng = Rng.ReadState(r);
+            int n = r.ReadInt32();
+            Civs.Clear(); _civDec.Clear(); _civMut.Clear();
+            for (int i = 0; i < n; i++)
+            {
+                _civDec.Add(Rng.ReadState(r));
+                _civMut.Add(Rng.ReadState(r));
+                Civs.Add(Civilization.Read(r));
+            }
+            Events = new EventSystem(); Events.ReadInto(r);
         }
     }
 }

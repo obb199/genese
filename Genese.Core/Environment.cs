@@ -55,8 +55,12 @@ namespace Genese.Core
 
         // ----- geração determinística -----
         // tempBias/umidBias deslocam o clima do mundo todo (mundos mais áridos, frios, úmidos…).
-        public void Generate(Rng rng, float tempBias = 0f, float umidBias = 0f)
+        // tempBias2/umidBias2: quando fornecidos, aplicam-se à metade direita (x >= W/2),
+        // criando DOIS BIOMAS independentes numa mesma ilha — separados por uma região de transição.
+        public void Generate(Rng rng, float tempBias = 0f, float umidBias = 0f,
+                             float tempBias2 = float.NaN, float umidBias2 = float.NaN)
         {
+            bool dualRegion = !float.IsNaN(tempBias2);
             _salt = (uint)rng.NextULong();
             float cx = (W - 1) * 0.5f, cy = (H - 1) * 0.5f, maxR = Math.Min(W, H) * 0.5f;
             for (int y = 0; y < H; y++)
@@ -71,8 +75,19 @@ namespace Genese.Core
                     float alt = Clamp01(alt0 * island - (1f - island) * 0.4f);
 
                     float latWarm = 1f - Math.Abs((y / (float)(H - 1)) - 0.5f) * 2f; // quente no meio
-                    float temp = Clamp01(latWarm * 0.8f - alt * 0.35f + 0.2f + tempBias);
-                    float umid = Clamp01(Fractal(x * 0.07f, y * 0.07f, _salt ^ 0x9E37, 4) * 0.8f + (alt < SeaLevel ? 0.4f : 0f) + umidBias);
+
+                    // Bias regional: transição suave na faixa central [W*0.4, W*0.6]
+                    float tb = tempBias, ub = umidBias;
+                    if (dualRegion)
+                    {
+                        float blend = Clamp01((x / (float)(W - 1) - 0.40f) / 0.20f); // 0 na esq, 1 na dir
+                        blend = blend * blend * (3f - 2f * blend); // smoothstep
+                        tb = tempBias + blend * (tempBias2 - tempBias);
+                        ub = umidBias + blend * ((float.IsNaN(umidBias2) ? umidBias : umidBias2) - umidBias);
+                    }
+
+                    float temp = Clamp01(latWarm * 0.8f - alt * 0.35f + 0.2f + tb);
+                    float umid = Clamp01(Fractal(x * 0.07f, y * 0.07f, _salt ^ 0x9E37, 4) * 0.8f + (alt < SeaLevel ? 0.4f : 0f) + ub);
 
                     Altitude[i] = alt; BaseTemp[i] = temp; BaseUmid[i] = umid;
                     float fault = ValueNoise(x * 0.15f, y * 0.15f, _salt + 777u);

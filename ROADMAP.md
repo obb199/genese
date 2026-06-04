@@ -18,9 +18,9 @@ Legenda: ✅ concluído · 🔜 próximo · ⬜ pendente
 | **E04** | Agentes: decisão individual (IA de utilidade) + integração na Unity (M04) | ✅ (5 testes) |
 | **E05** | Comportamento coletivo: relações, grupos por clustering, hierarquia, Figuras (M05) | ✅ (5 testes) |
 | **E06** | Mutação & especiação: pressão causal, isolamento reprodutivo, LOD (M03) | ✅ (5 testes) |
-| **E07** | Camada simbólica: comunicação/linguagem, cultura, religião (M08–M10) | 🔜 |
-| **E08** | Mundo & eventos: múltiplas civilizações, eventos ramificados (M11/M14) | ⬜ |
-| **E09** | Influência & apresentação: Atenção, nudges, observação (M12/M13) | ⬜ (protótipo de UX feito) |
+| **E07** | Camada simbólica: comunicação/linguagem, cultura, religião (M08–M10) | ✅ (6 testes) |
+| **E08** | Mundo & eventos: múltiplas civilizações, eventos ramificados (M11/M14) | ✅ (7 testes) |
+| **E09** | Influência & apresentação: Atenção, nudges, observação (M12/M13) | 🔜 |
 | **E10** | Render 3D, UX e Loja (DV; Steam/Play) | ⬜ (arte-alvo feita no protótipo) |
 | **E11** | QA & conformidade | ⬜ |
 | **E12** | Lançamento | ⬜ |

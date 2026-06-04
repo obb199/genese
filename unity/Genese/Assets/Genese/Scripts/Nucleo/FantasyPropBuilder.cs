@@ -56,61 +56,39 @@ namespace Genese.Nucleo
         {
             switch (v)
             {
-                case 0: // cogumelo_gigante principal com satélites
+                case 0: // cogumelo único com spots (simplificado)
                 {
-                    // tronco com nervuras
-                    Cyl(p, Mat(stem), 0.22f*s, 1.1f*s, new Vector3(0, 1.1f, 0)*s);
-                    for(int i=0;i<6;i++){float a=i/6f*Mathf.PI*2; var nb=Cyl(p,Mat(stem*0.85f),0.04f*s,1.0f*s,new Vector3(Mathf.Cos(a)*0.24f*s,1.0f*s,Mathf.Sin(a)*0.24f*s)); nb.transform.Rotate(0,0,8);}
-                    // cap principal com variação
-                    var cap=Prim.Sphere(p,Mat(col)); cap.transform.localScale=new Vector3(1.6f,0.7f,1.6f)*s; cap.transform.localPosition=new Vector3(0,2.25f,0)*s;
-                    // gills sob o cap
-                    for(int i=0;i<12;i++){float a=i/12f*Mathf.PI*2; var g=Cyl(p,Mat(stem*0.9f),0.03f*s,0.35f*s,new Vector3(Mathf.Cos(a)*0.9f*s,1.92f*s,Mathf.Sin(a)*0.9f*s)); g.transform.LookAt(p.position+new Vector3(0,1.92f,0)*s); g.transform.Rotate(90,0,0);}
-                    // spots brilhantes
-                    for(int i=0;i<9;i++){float a=i/9f*Mathf.PI*2,rr=Random.Range(0.3f,0.8f); Sph(p,Glow(accent,1.5f),0.09f*s,new Vector3(Mathf.Cos(a)*rr*s,2.3f*s,Mathf.Sin(a)*rr*s));}
-                    // cogumelos satélite
-                    for(int i=0;i<3;i++){float a=i/3f*Mathf.PI*2,ds=0.65f+i*0.2f; float ms=s*0.42f; var tr=p;
-                        Cyl(p,Mat(stem),0.1f*ms,0.6f*ms,new Vector3(Mathf.Cos(a)*1.6f*s,0.6f*ms,Mathf.Sin(a)*1.6f*s));
-                        var sc=Prim.Sphere(p,Mat(col)); sc.transform.localScale=new Vector3(0.7f,0.35f,0.7f)*ms; sc.transform.localPosition=new Vector3(Mathf.Cos(a)*1.6f*s,1.28f*ms,Mathf.Sin(a)*1.6f*s);}
-                    Light(p, accent, 6*s, 1.8f, new Vector3(0, 2.3f, 0)*s);
+                    Cyl(p, Mat(stem), 0.2f*s, 1.0f*s, new Vector3(0, 1.0f, 0)*s);
+                    var cap=Prim.Sphere(p,Mat(col)); cap.transform.localScale=new Vector3(1.55f,0.65f,1.55f)*s; cap.transform.localPosition=new Vector3(0,2.1f,0)*s;
+                    for(int i=0;i<5;i++){float a=i/5f*Mathf.PI*2,rr=Random.Range(0.3f,0.75f); Sph(p,Glow(accent,1.5f),0.09f*s,new Vector3(Mathf.Cos(a)*rr*s,2.2f*s,Mathf.Sin(a)*rr*s));}
+                    Light(p, accent, 5*s, 1.6f, new Vector3(0, 2.2f, 0)*s);
                     break;
                 }
-                case 1: // rede de micélio com nós grandes
+                case 1: // micélio simples (5 braços)
                 {
-                    // rede principal
-                    var center=Sph(p,Glow(accent,1.6f),0.22f*s,new Vector3(0,0.22f,0)*s);
-                    for(int i=0;i<8;i++){float a=i/8f*Mathf.PI*2,len=Random.Range(0.8f,1.6f)*s;
+                    var center=Sph(p,Glow(accent,1.6f),0.2f*s,new Vector3(0,0.2f,0)*s);
+                    for(int i=0;i<5;i++){float a=i/5f*Mathf.PI*2,len=Random.Range(0.8f,1.4f)*s;
                         var branch=Cyl(p,Mat(accent*0.8f),0.04f*s,len/2,new Vector3(Mathf.Cos(a)*len*0.5f,0.1f*s,Mathf.Sin(a)*len*0.5f)); branch.transform.LookAt(center.transform); branch.transform.Rotate(90,0,0);
-                        Sph(p,Glow(accent,1.2f),0.13f*s,new Vector3(Mathf.Cos(a)*len,0.13f*s,Mathf.Sin(a)*len));
-                        // ramificação secundária
-                        float a2=a+0.6f; Cyl(p,Mat(accent*0.6f),0.03f*s,len*0.4f,new Vector3(Mathf.Cos(a)*len+Mathf.Cos(a2)*0.5f*s,0.08f*s,Mathf.Sin(a)*len+Mathf.Sin(a2)*0.5f*s));}
-                    // cogumelos sobre nós
-                    for(int i=0;i<3;i++){float a=i/3f*Mathf.PI*2;
-                        Cyl(p,Mat(stem),0.07f*s,0.4f*s,new Vector3(Mathf.Cos(a)*1.1f*s,0.4f*s,Mathf.Sin(a)*1.1f*s));
-                        var mc=Prim.Sphere(p,Mat(col*0.9f)); mc.transform.localScale=new Vector3(0.5f,0.28f,0.5f)*s; mc.transform.localPosition=new Vector3(Mathf.Cos(a)*1.1f*s,0.85f*s,Mathf.Sin(a)*1.1f*s);}
-                    Light(p, accent, 4*s, 1.4f, new Vector3(0,0.5f,0)*s);
+                        Sph(p,Glow(accent,1.2f),0.12f*s,new Vector3(Mathf.Cos(a)*len,0.12f*s,Mathf.Sin(a)*len));}
+                    Light(p, accent, 4*s, 1.2f, new Vector3(0,0.4f,0)*s);
                     break;
                 }
-                case 2: // anel de cogumelos com esporos voadores
+                case 2: // trio de cogumelos
                 {
-                    int count=6; for(int i=0;i<count;i++){float a=i/(float)count*Mathf.PI*2,ms=s*(0.5f+Random.value*0.5f),rr=0.9f*s;
-                        Cyl(p,Mat(stem),0.1f*ms,0.7f*ms,new Vector3(Mathf.Cos(a)*rr,0.7f*ms,Mathf.Sin(a)*rr));
-                        var mc=Prim.Sphere(p,Mat(col)); mc.transform.localScale=new Vector3(0.8f,0.4f,0.8f)*ms; mc.transform.localPosition=new Vector3(Mathf.Cos(a)*rr,1.45f*ms,Mathf.Sin(a)*rr);
-                        for(int k=0;k<3;k++) Sph(p,Glow(accent,Random.Range(1.1f,1.8f)),0.06f*s,new Vector3(Mathf.Cos(a)*rr+Random.Range(-0.3f,0.3f)*s,Random.Range(0.5f,2f)*s,Mathf.Sin(a)*rr+Random.Range(-0.3f,0.3f)*s));}
-                    // cogumelo central grande
-                    Cyl(p,Mat(stem),0.28f*s,1.4f*s,new Vector3(0,1.4f,0)*s);
-                    var bc=Prim.Sphere(p,Mat(col)); bc.transform.localScale=new Vector3(2f,0.9f,2f)*s; bc.transform.localPosition=new Vector3(0,2.9f,0)*s;
-                    Light(p,accent,7*s,2.0f,new Vector3(0,2.5f,0)*s);
+                    for(int i=0;i<3;i++){float a=i/3f*Mathf.PI*2,ms=s*(0.55f+Random.value*0.4f),rr=0.85f*s;
+                        Cyl(p,Mat(stem),0.1f*ms,0.65f*ms,new Vector3(Mathf.Cos(a)*rr,0.65f*ms,Mathf.Sin(a)*rr));
+                        var mc=Prim.Sphere(p,Mat(col)); mc.transform.localScale=new Vector3(0.75f,0.38f,0.75f)*ms; mc.transform.localPosition=new Vector3(Mathf.Cos(a)*rr,1.35f*ms,Mathf.Sin(a)*rr);
+                        for(int k=0;k<2;k++) Sph(p,Glow(accent,1.4f),0.07f*s,new Vector3(Mathf.Cos(a)*rr+Random.Range(-0.3f,0.3f)*s,Random.Range(0.5f,1.8f)*s,Mathf.Sin(a)*rr+Random.Range(-0.3f,0.3f)*s));}
+                    Light(p,accent,5*s,1.6f,new Vector3(0,1.2f,0)*s);
                     break;
                 }
-                default: // coluna de esporos
+                default: // coluna simples
                 {
-                    Cyl(p,Mat(stem*0.85f),0.16f*s,1.8f*s,new Vector3(0,1.8f,0)*s);
-                    // anéis de esporos ao longo do tronco
-                    for(int i=0;i<5;i++){float y=(0.6f+i*0.4f)*s,r=(0.3f+i*0.08f)*s;
-                        for(int k=0;k<8;k++){float a=k/8f*Mathf.PI*2; Sph(p,Glow(accent,1.3f+Random.value*0.5f),0.07f*s,new Vector3(Mathf.Cos(a)*r,y+Random.Range(-0.1f,0.1f)*s,Mathf.Sin(a)*r));}}
-                    // cap explosivo no topo
-                    var tc=Prim.Sphere(p,Mat(col)); tc.transform.localScale=new Vector3(2.4f,1.1f,2.4f)*s; tc.transform.localPosition=new Vector3(0,3.7f,0)*s;
-                    Light(p,accent,8*s,2.2f,new Vector3(0,3f,0)*s);
+                    Cyl(p,Mat(stem*0.85f),0.15f*s,1.7f*s,new Vector3(0,1.7f,0)*s);
+                    for(int i=0;i<3;i++){float y=(0.7f+i*0.5f)*s,r=(0.28f+i*0.08f)*s;
+                        for(int k=0;k<5;k++){float a=k/5f*Mathf.PI*2; Sph(p,Glow(accent,1.3f),0.07f*s,new Vector3(Mathf.Cos(a)*r,y,Mathf.Sin(a)*r));}}
+                    var tc=Prim.Sphere(p,Mat(col)); tc.transform.localScale=new Vector3(2.2f,1.0f,2.2f)*s; tc.transform.localPosition=new Vector3(0,3.5f,0)*s;
+                    Light(p,accent,6*s,1.8f,new Vector3(0,2.8f,0)*s);
                     break;
                 }
             }
@@ -126,7 +104,7 @@ namespace Genese.Nucleo
                 case 0: // formação principal com múltiplos cristais
                 {
                     Color[] cc={col,col2,accent,col,col2};
-                    for(int i=0;i<7;i++){float a=i/7f*Mathf.PI*2+(float)i*0.3f,h=Random.Range(0.8f,2.2f)*s,tilt=Random.Range(-15,15);
+                    for(int i=0;i<5;i++){float a=i/5f*Mathf.PI*2+(float)i*0.3f,h=Random.Range(0.8f,2.2f)*s,tilt=Random.Range(-15,15);
                         var c=Cone(p,Met(cc[i%cc.Length]),0.18f*s,h,new Vector3(Mathf.Cos(a)*0.35f*s,0,Mathf.Sin(a)*0.35f*s),Quaternion.Euler(tilt,a*Mathf.Rad2Deg,0));
                         Cone(p,Met(cc[(i+2)%cc.Length]),0.12f*s,h*0.35f,new Vector3(Mathf.Cos(a)*0.35f*s,h,Mathf.Sin(a)*0.35f*s),Quaternion.Euler(180+tilt,a*Mathf.Rad2Deg,0));}
                     // base plana de cristal
@@ -141,7 +119,7 @@ namespace Genese.Nucleo
                     // base plana grande
                     Cube(p,Iri(col),new Vector3(1.8f,0.25f,1.8f)*s,new Vector3(0,0.12f,0)*s);
                     // espiras crescendo da plataforma
-                    for(int i=0;i<12;i++){float a=i/12f*Mathf.PI*2,rr=Random.Range(0.2f,0.8f)*s,h=Random.Range(0.4f,1.5f)*s;
+                    for(int i=0;i<7;i++){float a=i/7f*Mathf.PI*2,rr=Random.Range(0.2f,0.8f)*s,h=Random.Range(0.4f,1.5f)*s;
                         Cone(p,Met(i%2==0?col:col2),0.12f*s,h,new Vector3(Mathf.Cos(a)*rr,0.25f*s,Mathf.Sin(a)*rr),Quaternion.Euler(Random.Range(-10,10),a*Mathf.Rad2Deg,0));}
                     // luz difusa
                     Light(p,col,6*s,1.4f,new Vector3(0,0.5f,0)*s);
@@ -342,7 +320,7 @@ namespace Genese.Nucleo
                     // pérola brilhante
                     Sph(p,Glow(accent,2.2f),0.28f*s,new Vector3(0,0.65f,0.2f)*s);
                     // tentáculos ao redor
-                    for(int i=0;i<10;i++){float a=i/10f*Mathf.PI*2; Cone(p,Mat(glow_*0.8f),0.04f*s,0.35f*s,new Vector3(Mathf.Cos(a)*0.6f*s,0.15f*s,Mathf.Sin(a)*0.45f*s),Quaternion.Euler(-70,a*Mathf.Rad2Deg,0),6);}
+                    for(int i=0;i<6;i++){float a=i/6f*Mathf.PI*2; Cone(p,Mat(glow_*0.8f),0.04f*s,0.35f*s,new Vector3(Mathf.Cos(a)*0.6f*s,0.15f*s,Mathf.Sin(a)*0.45f*s),Quaternion.Euler(-70,a*Mathf.Rad2Deg,0),6);}
                     Light(p,accent,4*s,1.8f,new Vector3(0,0.7f,0)*s);
                     break;
                 }
@@ -394,7 +372,7 @@ namespace Genese.Nucleo
                     // ponto de ancoragem superior
                     Sph(p,Mat(green*0.7f),0.3f*s,new Vector3(0,2.8f,0)*s);
                     // vinhas pendentes (12)
-                    for(int i=0;i<12;i++){float a=i/12f*Mathf.PI*2,rr=Random.Range(0.1f,0.6f)*s,h=Random.Range(1.2f,2.6f)*s;
+                    for(int i=0;i<7;i++){float a=i/7f*Mathf.PI*2,rr=Random.Range(0.1f,0.6f)*s,h=Random.Range(1.2f,2.6f)*s;
                         Cyl(p,Mat(green*0.8f),0.03f*s,h,new Vector3(Mathf.Cos(a)*rr,2.8f-h*0.5f,Mathf.Sin(a)*rr)*s);
                         // nós luminosos ao longo da vinha
                         for(int k=0;k<3;k++) Sph(p,Glow(k%2==0?accent:glow_,1.4f+Random.value*0.6f),0.07f*s,new Vector3(Mathf.Cos(a)*rr,2.8f-(h*(0.2f+k*0.3f)),Mathf.Sin(a)*rr)*s);}
@@ -570,7 +548,7 @@ namespace Genese.Nucleo
                 }
                 case 2: // espiral de Fibonacci
                 {
-                    float phi=1.618f; for(int i=0;i<12;i++){float r=Mathf.Pow(phi,i*0.18f)*0.12f*s,a=i*137.5f*Mathf.Deg2Rad;
+                    float phi=1.618f; for(int i=0;i<8;i++){float r=Mathf.Pow(phi,i*0.18f)*0.12f*s,a=i*137.5f*Mathf.Deg2Rad;
                         Sph(p,Mat(i%3==0?accent:i%3==1?branch:leaf),r*0.8f,new Vector3(Mathf.Cos(a)*r,r*0.3f*i*0.08f,Mathf.Sin(a)*r));
                         if(i>0){float pr=Mathf.Pow(phi,(i-1)*0.18f)*0.12f*s,pa=(i-1)*137.5f*Mathf.Deg2Rad; var conn=Prim.Cylinder(p,Mat(branch*0.8f)); conn.transform.localScale=new Vector3(0.03f,0.5f,0.03f)*s; conn.transform.localPosition=(new Vector3(Mathf.Cos(a)*r,r*0.3f*i*0.08f,Mathf.Sin(a)*r)+new Vector3(Mathf.Cos(pa)*pr,pr*0.3f*(i-1)*0.08f,Mathf.Sin(pa)*pr))*0.5f; conn.transform.LookAt(p.position+new Vector3(Mathf.Cos(a)*r,r*0.3f*i*0.08f,Mathf.Sin(a)*r)); conn.transform.Rotate(90,0,0);}}
                     break;

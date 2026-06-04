@@ -27,7 +27,11 @@ namespace Genese.Nucleo
         void Update()
         {
             if (cam == null || sim == null) return;
-            if (_attention < 100f) _attention += Time.deltaTime * 8f;
+            // Atenção recupera no tempo; teto estendido pelo fervor religioso (M12)
+            float attCap = sim.Sim != null
+                ? 100f + sim.Sim.Pop.Belief.AttentionBonus * 30f
+                : 100f;
+            if (_attention < attCap) _attention += Time.deltaTime * 8f;
 
             if (Input.GetMouseButtonDown(0)) { _down = Input.mousePosition; _validDown = Input.mousePosition.x < Screen.width - 290; }
             if (Input.GetMouseButtonUp(0) && _validDown && Vector3.Distance(_down, Input.mousePosition) < 10f)
@@ -64,6 +68,7 @@ namespace Genese.Nucleo
                         int i = env.Idx(nx, ny);
                         env.Comida[i] = Mathf.Min(1f, env.Comida[i] + 0.5f);  // brota comida (pressão ambiental)
                     }
+                sim.Sim.Pop.Belief.RecordNudge(+1); // percebido como benigno (M10 §4.3)
                 _msg = "Sinal — comida brota; as criaturas tendem a vir";
             }
             else if (_mode == "faisca")
@@ -71,6 +76,7 @@ namespace Genese.Nucleo
                 Fx.Faisca(worldPoint);
                 var c = Nearest(x, y);
                 if (c != null) { c.Genome = CG.Reproduction.Reproduce(c.Genome, c.Genome, _nudgeRng, 1f); creatures.MarkDirty(c.Id); _msg = $"Faísca — criatura #{c.Id} sofreu mutação"; }
+                sim.Sim.Pop.Belief.RecordNudge(0);  // resultado ambíguo (M10)
             }
             else if (_mode == "inspiracao")
             {
@@ -81,6 +87,7 @@ namespace Genese.Nucleo
                     float dx = c.X - (x + 0.5f), dy = c.Y - (y + 0.5f);
                     if (dx * dx + dy * dy < 9f) { c.Energy = Mathf.Min(1f, c.Energy + 0.5f); n++; }
                 }
+                sim.Sim.Pop.Belief.RecordNudge(+1); // percebido como benigno (M10 §4.3)
                 _msg = $"Inspiração — {n} criatura(s) revigorada(s)";
             }
         }
@@ -107,17 +114,33 @@ namespace Genese.Nucleo
         void OnGUI()
         {
             if (sim == null || sim.Sim == null) return;
-            const int W = 280;
+            DrawCivPanel();
+            const int W = 290;
             var env = sim.Sim.Env;
             ulong tick = sim.Sim.Tick;
             float season = Mathf.Sin(2f * Mathf.PI * (tick % CG.Environment.Year) / CG.Environment.Year);
+            var lang    = sim.Sim.Pop.Language;
+            var culture = sim.Sim.Pop.Culture;
+            var belief  = sim.Sim.Pop.Belief;
+            float attentionMax = 100f + belief.AttentionBonus * 30f;
 
-            GUILayout.BeginArea(new Rect(Screen.width - W - 10, 10, W, 346), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(Screen.width - W - 10, 10, W, 570), GUI.skin.box);
             GUILayout.Label("<b>GÊNESE — Núcleo na Unity</b>");
             string fase = dayNight != null ? dayNight.PhaseName : "—";
             GUILayout.Label($"tick {tick}  ·  pop {sim.Sim.Pop.Count}  ·  {fase}");
-            GUILayout.Label($"grupos {sim.Sim.Pop.Social.GroupCount}  ·  figuras {sim.Sim.Pop.Social.FigureCount}");
-            GUILayout.Label($"estação {(season >= 0 ? "quente" : "fria")} ({season:0.00})  ·  Atenção {Mathf.RoundToInt(_attention)}");
+            // Multi-civ (E08): mostra pop de cada civ
+            for (int ci = 0; ci < sim.Sim.Civs.Count; ci++)
+            {
+                var civ = sim.Sim.Civs[ci];
+                string marker = ci == 0 ? "● " : "○ ";
+                GUILayout.Label($"{marker}Civ {ci}: pop {civ.Pop.Count}  grp {civ.Pop.Social.GroupCount}  fig {civ.Pop.Social.FigureCount}");
+            }
+            GUILayout.Label($"estação {(season >= 0 ? "quente" : "fria")}  ·  Atenção {Mathf.RoundToInt(_attention)}/{Mathf.RoundToInt(attentionMax)}");
+
+            // Camada simbólica
+            GUILayout.Label($"língua: <b>{lang.Stage}</b>  léxico:{lang.Lexicon.Count}  deriva:{lang.DriftCount}");
+            GUILayout.Label($"cultura: memes:{culture.MemeCount}  coesão:{culture.CulturalCohesion:0.00}");
+            GUILayout.Label($"religião: <b>{belief.Stage}</b>  fervor:{belief.Fervor:0.00}  imagem:{belief.Image}");
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(sim.playing ? "⏸" : "▶")) sim.playing = !sim.playing;
@@ -134,8 +157,13 @@ namespace Genese.Nucleo
             if (GUILayout.Button("⟳ Novo mundo")) sim.NewWorld();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("‹")) sim.CycleClimate(-1);
-            GUILayout.Label($"Clima: {sim.ClimateName}", GUILayout.Width(W - 96));
+            GUILayout.Label($"Clima N: {sim.ClimateName}", GUILayout.Width(W - 96));
             if (GUILayout.Button("›")) sim.CycleClimate(1);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("‹")) sim.CycleClimate2(-1);
+            GUILayout.Label($"Clima S: {sim.ClimateName2}", GUILayout.Width(W - 96));
+            if (GUILayout.Button("›")) sim.CycleClimate2(1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("‹")) sim.CycleCulture(-1);
@@ -144,14 +172,24 @@ namespace Genese.Nucleo
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("‹")) sim.CycleFantasyTheme(-1);
-            GUILayout.Label($"Bioma: {sim.FantasyThemeName}", GUILayout.Width(W - 96));
+            GUILayout.Label($"Bioma N: {sim.FantasyThemeName}", GUILayout.Width(W - 96));
             if (GUILayout.Button("›")) sim.CycleFantasyTheme(1);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("‹")) sim.CycleFantasyTheme2(-1);
+            GUILayout.Label($"Bioma S: {sim.FantasyThemeName2}", GUILayout.Width(W - 96));
+            if (GUILayout.Button("›")) sim.CycleFantasyTheme2(1);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("‹")) sim.CycleCulture2(-1);
+            GUILayout.Label($"Cultura S: {sim.CultureName2}", GUILayout.Width(W - 96));
+            if (GUILayout.Button("›")) sim.CycleCulture2(1);
             GUILayout.EndHorizontal();
             if (!string.IsNullOrEmpty(_msg)) GUILayout.Label("▸ " + _msg);
             GUILayout.EndArea();
 
             // ---- inspeção ----
-            GUILayout.BeginArea(new Rect(Screen.width - W - 10, 366, W, Screen.height - 376), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(Screen.width - W - 10, 590, W, Screen.height - 600), GUI.skin.box);
             var cr = _creatureId >= 0 ? FindCreature(_creatureId) : null;
             if (cr != null)
             {
@@ -181,8 +219,57 @@ namespace Genese.Nucleo
                 GUILayout.Label($"comida     {Bar(env.Comida[i])}");
                 GUILayout.Label($"água       {Bar(env.Agua[i])}");
                 GUILayout.Label($"material   {Bar(env.Material[i])}");
+                GUILayout.Space(4);
+                GUILayout.Label($"<b>Cultura da civilização</b>");
+                GUILayout.Label($"fervor   {Bar(belief.Fervor)}");
+                GUILayout.Label($"coesão   {Bar(culture.CulturalCohesion)}");
+                GUILayout.Label($"organiz. {Bar(belief.Organization)}");
+                if (culture.Dominant() is CG.Culture.Meme dom)
+                    GUILayout.Label($"meme dom.: [{dom.Type}] força {dom.Force:0.00}  prev {dom.Prevalence:0.00}");
             }
             else GUILayout.Label("Clique numa célula (recursos) ou criatura (genoma).");
+            GUILayout.EndArea();
+        }
+
+        void DrawCivPanel()
+        {
+            if (sim == null || sim.Sim == null) return;
+            const int PW = 250;
+            GUILayout.BeginArea(new Rect(10, 10, PW, 300), GUI.skin.box);
+            GUILayout.Label("<b>Civilizações (E08)</b>");
+            for (int ci = 0; ci < sim.Sim.Civs.Count; ci++)
+            {
+                var civ = sim.Sim.Civs[ci];
+                GUILayout.Label($"Civ {ci}: pop {civ.Pop.Count} · {civ.Pop.Language.Stage} · {civ.Pop.Belief.Stage}");
+                foreach (var kv in civ.Relations)
+                {
+                    var r = kv.Value;
+                    string icon = r.Stance switch
+                    {
+                        CG.CivStance.Aliada    => "✦",
+                        CG.CivStance.Comercial => "⇌",
+                        CG.CivStance.Guerra    => "⚔",
+                        CG.CivStance.Vassalagem=> "▼",
+                        _ => "·"
+                    };
+                    GUILayout.Label($"  {icon} ↔ Civ {kv.Key}: T{r.Trust:0.0} R{r.Resentment:0.0}");
+                }
+            }
+            GUILayout.Space(4);
+            GUILayout.Label($"<b>Eventos</b> (crônica: {sim.Sim.Events.TotalEvents})");
+            var evs = sim.Sim.Events.Active;
+            if (evs.Count == 0) GUILayout.Label("  (sem eventos activos)");
+            else foreach (var ev in evs)
+                GUILayout.Label($"  [{ev.Type}] civ {ev.CivId}");
+            // Últimos 3 eventos resolvidos
+            var log = sim.Sim.Events.Log;
+            int start = System.Math.Max(0, log.Count - 3);
+            for (int i = start; i < log.Count; i++)
+            {
+                string res = log[i].Resolution ?? "";
+                if (res.Length > 38) res = res.Substring(0, 38) + "…";
+                GUILayout.Label($"  ✓ {res}");
+            }
             GUILayout.EndArea();
         }
 
